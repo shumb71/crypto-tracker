@@ -108,6 +108,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.0</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -156,6 +157,20 @@ tr:last-child td { border-bottom: none; }
     </div>
     <div class="card">
       <div class="card-title">Operaciones registradas</div>
+      <div class="row" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <select id="filtroTipo" onchange="renderOpsTable()" style="width:120px;">
+          <option value="">Todos los tipos</option>
+          <option value="buy">Compra</option>
+          <option value="sell">Venta</option>
+        </select>
+        <select id="filtroSym" onchange="renderOpsTable()" style="width:120px;">
+          <option value="">Todos los pares</option>
+        </select>
+        <input type="date" id="filtroDesde" onchange="renderOpsTable()" placeholder="Desde" style="width:145px;" />
+        <input type="date" id="filtroHasta" onchange="renderOpsTable()" placeholder="Hasta" style="width:145px;" />
+        <button onclick="limpiarFiltros()" style="font-size:12px;height:30px;padding:0 10px;"><i class="ti ti-x"></i> Limpiar</button>
+        <span id="filtroCount" class="small muted"></span>
+      </div>
       <div class="ovx">
         <table>
           <thead><tr><th>Tipo</th><th>Símbolo</th><th>Cantidad</th><th>Precio USDT</th><th>Total USDT</th><th>Fecha</th><th></th></tr></thead>
@@ -403,13 +418,48 @@ function refreshAll() {
   renderLibro();
 }
 
+function updateFiltroSymOptions() {
+  const sel = document.getElementById('filtroSym');
+  if (!sel) return;
+  const cur = sel.value;
+  const symsUsed = [...new Set(operations.map(o => o.sym))].sort();
+  sel.innerHTML = '<option value="">Todos los pares</option>' + symsUsed.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+}
+
+function limpiarFiltros() {
+  document.getElementById('filtroTipo').value = '';
+  document.getElementById('filtroSym').value = '';
+  document.getElementById('filtroDesde').value = '';
+  document.getElementById('filtroHasta').value = '';
+  renderOpsTable();
+}
+
 function renderOpsTable() {
+  updateFiltroSymOptions();
   const tbody = document.getElementById('opsTable');
   if (!operations.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:1rem 0 0.5rem;">No hay operaciones registradas.</td></tr>';
+    const c = document.getElementById('filtroCount'); if(c) c.textContent = '';
     return;
   }
-  tbody.innerHTML = operations.map(o => `
+  const filtroTipo = document.getElementById('filtroTipo')?.value || '';
+  const filtroSym = document.getElementById('filtroSym')?.value || '';
+  const filtroDesde = document.getElementById('filtroDesde')?.value || '';
+  const filtroHasta = document.getElementById('filtroHasta')?.value || '';
+  let filtered = operations.filter(o => {
+    if (filtroTipo && o.type !== filtroTipo) return false;
+    if (filtroSym && o.sym !== filtroSym) return false;
+    if (filtroDesde && o.date < filtroDesde) return false;
+    if (filtroHasta && o.date > filtroHasta) return false;
+    return true;
+  });
+  const countEl = document.getElementById('filtroCount');
+  if (countEl) countEl.textContent = filtered.length !== operations.length ? `${filtered.length} de ${operations.length} operaciones` : `${operations.length} operaciones`;
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:1rem 0 0.5rem;">No hay operaciones con esos filtros.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(o => `
     <tr>
       <td><span class="tag ${o.type==='buy'?'tag-buy':'tag-sell'}">${o.type==='buy'?'Compra':'Venta'}</span></td>
       <td><span class="sym-badge">${o.sym}</span></td>
@@ -967,9 +1017,25 @@ function renderFuturos() {
       <input type="number" id="fsCantidad" placeholder="Cantidad" step="any" />
       <input type="number" id="fsApal" placeholder="Apalancam." step="1" min="1" style="width:110px;" />
     </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;">
+        <div class="card-title" style="color:#16a34a;margin-bottom:8px;">Take Profit — rellena precio O P&L</div>
+        <div class="row" style="margin:0;gap:6px;">
+          <input type="number" id="fsTP" placeholder="Precio TP" step="any" style="width:130px;" oninput="fsSyncTP('precio')" />
+          <span style="color:#888;font-size:12px;">o</span>
+          <input type="number" id="fsTPpnl" placeholder="P&L esperado (USDT)" step="any" style="width:160px;" oninput="fsSyncTP('pnl')" />
+        </div>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;">
+        <div class="card-title" style="color:#dc2626;margin-bottom:8px;">Stop Loss — rellena precio O P&L</div>
+        <div class="row" style="margin:0;gap:6px;">
+          <input type="number" id="fsSL" placeholder="Precio SL" step="any" style="width:130px;" oninput="fsSyncSL('precio')" />
+          <span style="color:#888;font-size:12px;">o</span>
+          <input type="number" id="fsSLpnl" placeholder="P&L esperado (USDT)" step="any" style="width:160px;" oninput="fsSyncSL('pnl')" />
+        </div>
+      </div>
+    </div>
     <div class="row">
-      <input type="number" id="fsTP" placeholder="Take Profit" step="any" />
-      <input type="number" id="fsSL" placeholder="Stop Loss" step="any" />
       <button class="primary" onclick="runFutSim()"><i class="ti ti-calculator"></i> Simular</button>
     </div>
     <div id="fsResult"></div>
@@ -1104,6 +1170,38 @@ function deleteFutureOp(id) {
   scheduleSave();
 }
 
+function fsGetBase() {
+  const entrada = parseFloat(document.getElementById('fsEntrada').value);
+  const cantidad = parseFloat(document.getElementById('fsCantidad').value);
+  const apal = parseFloat(document.getElementById('fsApal').value);
+  const dir = document.getElementById('fsDir').value;
+  return { entrada, cantidad, apal, dir, mult: dir === 'long' ? 1 : -1 };
+}
+
+function fsSyncTP(fuente) {
+  const { entrada, cantidad, mult } = fsGetBase();
+  if (isNaN(entrada) || isNaN(cantidad)) return;
+  if (fuente === 'precio') {
+    const tp = parseFloat(document.getElementById('fsTP').value);
+    if (!isNaN(tp)) document.getElementById('fsTPpnl').value = fmt(mult * (tp - entrada) * cantidad, 2).replace(/\./g,',');
+  } else {
+    const pnl = parseFloat(document.getElementById('fsTPpnl').value);
+    if (!isNaN(pnl)) document.getElementById('fsTP').value = (entrada + (pnl / (mult * cantidad))).toFixed(6);
+  }
+}
+
+function fsSyncSL(fuente) {
+  const { entrada, cantidad, mult } = fsGetBase();
+  if (isNaN(entrada) || isNaN(cantidad)) return;
+  if (fuente === 'precio') {
+    const sl = parseFloat(document.getElementById('fsSL').value);
+    if (!isNaN(sl)) document.getElementById('fsSLpnl').value = fmt(mult * (sl - entrada) * cantidad, 2).replace(/\./g,',');
+  } else {
+    const pnl = parseFloat(document.getElementById('fsSLpnl').value);
+    if (!isNaN(pnl)) document.getElementById('fsSL').value = (entrada + (pnl / (mult * cantidad))).toFixed(6);
+  }
+}
+
 function runFutSim() {
   const dir = document.getElementById('fsDir').value;
   const par = document.getElementById('fsPar').value;
@@ -1133,8 +1231,8 @@ function runFutSim() {
     <div class="sim-row"><span>Apalancamiento</span><span>${apal}x</span></div>
     <div class="sim-row"><span>Margen necesario</span><span style="font-weight:600;">${fmt(margen,2)} USDT</span></div>
     <div class="sim-row"><span class="${liqCls}">Precio de liquidación</span><span class="${liqCls}" style="font-weight:600;">${fmtPrice(liq)} USDT</span></div>
-    ${pnlTP !== null ? `<div class="sim-row"><span class="green">P&L en Take Profit (${fmtPrice(tp)})</span><span class="green">+${fmt(pnlTP,2)} USDT (${fmt(pnlTP/margen*100,1)}% del margen)</span></div>` : ''}
-    ${pnlSL !== null ? `<div class="sim-row"><span class="red">P&L en Stop Loss (${fmtPrice(sl)})</span><span class="red">${fmt(pnlSL,2)} USDT (${fmt(pnlSL/margen*100,1)}% del margen)</span></div>` : ''}
+    ${pnlTP !== null ? `<div class="sim-row"><span class="green">P&L en TP (${fmtPrice(tp)})</span><span class="green">+${fmt(pnlTP,2)} USDT (${fmt(pnlTP/margen*100,1)}% margen)</span></div>` : ''}
+    ${pnlSL !== null ? `<div class="sim-row"><span class="red">P&L en SL (${fmtPrice(sl)})</span><span class="red">${fmt(pnlSL,2)} USDT (${fmt(pnlSL/margen*100,1)}% margen)</span></div>` : ''}
     ${rr !== null ? `<div class="sim-row"><span>Ratio Riesgo/Beneficio</span><span style="font-weight:600;">1 : ${fmt(rr,2)}</span></div>` : ''}
   </div>`;
 }
