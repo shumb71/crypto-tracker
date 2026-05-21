@@ -123,6 +123,7 @@ tr:last-child td { border-bottom: none; }
     <button class="nav-btn" onclick="showSection('historial',this)"><i class="ti ti-history"></i> Historial</button>
     <button class="nav-btn" onclick="showSection('libro',this)"><i class="ti ti-book"></i> Libro</button>
     <button class="nav-btn" onclick="showSection('conceptos',this)"><i class="ti ti-bulb"></i> Conceptos</button>
+    <button class="nav-btn" onclick="showSection('futuros',this)"><i class="ti ti-trending-up"></i> Futuros</button>
   </nav>
 
   <div id="precios" class="section active">
@@ -204,7 +205,11 @@ tr:last-child td { border-bottom: none; }
   <div id="conceptos" class="section">
     <div id="conceptosContent"></div>
   </div>
+  <div id="futuros" class="section">
+    <div id="futurosContent"></div>
+  </div>
 
+<div class="toast" id="toast"></div>
 <div class="toast" id="toast"></div>
 
 <script src="https://accounts.google.com/gsi/client" async></script>
@@ -218,6 +223,8 @@ let symbols = ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE'];
 let prices = {};
 let operations = [];
 let saleHistory = [];
+let futuresOps = [];
+let futuresSaldo = 0;
 let lastSaved = null;
 let accessToken = null;
 let driveFileId = null;
@@ -252,6 +259,7 @@ function showSection(id, btn) {
   if (id === 'historial') renderHistory();
   if (id === 'libro') renderLibro();
   if (id === 'conceptos') renderConceptos();
+  if (id === 'futuros') renderFuturos();
   if (id === 'operaciones') { renderOpsTable(); populateSymSelects(); }
 }
 
@@ -659,6 +667,8 @@ async function loadFromDrive() {
         if (d.saleHistory) saleHistory = d.saleHistory;
         if (d.symbols) symbols = d.symbols;
         if (d.lastSaved) lastSaved = d.lastSaved;
+        if (d.futuresOps) futuresOps = d.futuresOps;
+        if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
         renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
         showToast('✓ Datos cargados desde Drive');
         updateSyncBar();
@@ -680,7 +690,7 @@ async function saveToDrive() {
     await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved })
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo })
     });
     saveToLocal();
     btn.className = 'drive-btn connected';
@@ -696,7 +706,7 @@ async function saveToDrive() {
 }
 
 function saveToLocal() {
-  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved })); } catch(e) {}
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo })); } catch(e) {}
 }
 
 function scheduleSave() {
@@ -713,6 +723,8 @@ function loadData() {
       if (d.saleHistory) saleHistory = d.saleHistory;
       if (d.symbols) symbols = d.symbols;
       if (d.lastSaved) lastSaved = d.lastSaved;
+      if (d.futuresOps) futuresOps = d.futuresOps;
+      if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
     }
   } catch(e) {}
 }
@@ -896,6 +908,235 @@ function renderConceptos() {
   }).join('');
 
   document.getElementById('conceptosContent').innerHTML = html;
+}
+
+/* ===== FUTUROS ===== */
+function renderFuturos() {
+  const livePrice = sym => prices[sym]?.price || 0;
+
+  // Saldo card
+  const pnlRealizado = futuresOps.filter(o => o.estado === 'cerrada').reduce((a, o) => a + (o.pnl || 0), 0);
+  const posAbiertas = futuresOps.filter(o => o.estado === 'abierta');
+  const pnlNoReal = posAbiertas.reduce((a, o) => {
+    const cur = livePrice(o.par.replace('-USDT','').replace('USDT',''));
+    if (!cur) return a;
+    const mult = o.dir === 'long' ? 1 : -1;
+    return a + mult * (cur - o.entrada) * o.cantidad;
+  }, 0);
+
+  const saldoHtml = `<div class="metric-grid" style="margin-bottom:16px;">
+    <div class="metric"><div class="metric-label">Saldo cuenta futuros</div>
+      <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
+        <span id="futSaldoVal">${fmt(futuresSaldo,2)} USDT</span>
+        <button onclick="editFutSaldo()" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+      </div>
+    </div>
+    <div class="metric"><div class="metric-label">P&L realizado</div><div class="metric-value ${pnlRealizado>=0?'green':'red'}">${pnlRealizado>=0?'+':''}${fmt(pnlRealizado,2)} USDT</div></div>
+    <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${pnlNoReal>=0?'green':'red'}">${pnlNoReal>=0?'+':''}${fmt(pnlNoReal,2)} USDT</div></div>
+    <div class="metric"><div class="metric-label">Posiciones abiertas</div><div class="metric-value">${posAbiertas.length}</div></div>
+  </div>`;
+
+  // Formulario nueva operación
+  const formHtml = `<div class="card">
+    <div class="card-title">Nueva operación de futuros</div>
+    <div class="row">
+      <select id="ftDir"><option value="long">Long ▲</option><option value="short">Short ▼</option></select>
+      <select id="ftPar">${symbols.map(s=>`<option value="${s}-USDT">${s}-USDT</option>`).join('')}</select>
+      <input type="number" id="ftEntrada" placeholder="Precio entrada" step="any" style="width:150px;" />
+      <input type="number" id="ftCantidad" placeholder="Cantidad" step="any" />
+      <input type="number" id="ftApal" placeholder="Apalancam." step="1" min="1" style="width:110px;" />
+    </div>
+    <div class="row">
+      <input type="number" id="ftTP" placeholder="Take Profit" step="any" />
+      <input type="number" id="ftSL" placeholder="Stop Loss" step="any" />
+      <input type="date" id="ftFecha" />
+      <input type="text" id="ftNotas" placeholder="Notas (opcional)" style="width:180px;" />
+      <button onclick="ftCargarPrecio()"><i class="ti ti-cloud-download"></i> Precio actual</button>
+      <button class="primary" onclick="addFutureOp()"><i class="ti ti-plus"></i> Añadir</button>
+    </div>
+    <div id="ftMsg" class="small muted" style="margin-top:4px;"></div>
+  </div>`;
+
+  // Simulador
+  const simHtml = `<div class="card">
+    <div class="card-title">Simulador Long / Short</div>
+    <div class="row">
+      <select id="fsDir"><option value="long">Long ▲</option><option value="short">Short ▼</option></select>
+      <select id="fsPar">${symbols.map(s=>`<option value="${s}-USDT">${s}-USDT</option>`).join('')}</select>
+      <input type="number" id="fsEntrada" placeholder="Precio entrada" step="any" style="width:150px;" />
+      <input type="number" id="fsCantidad" placeholder="Cantidad" step="any" />
+      <input type="number" id="fsApal" placeholder="Apalancam." step="1" min="1" style="width:110px;" />
+    </div>
+    <div class="row">
+      <input type="number" id="fsTP" placeholder="Take Profit" step="any" />
+      <input type="number" id="fsSL" placeholder="Stop Loss" step="any" />
+      <button class="primary" onclick="runFutSim()"><i class="ti ti-calculator"></i> Simular</button>
+    </div>
+    <div id="fsResult"></div>
+  </div>`;
+
+  // Tabla posiciones abiertas
+  const abiertasHtml = posAbiertas.length ? `<div class="card">
+    <div class="card-title">Posiciones abiertas</div>
+    <div class="ovx"><table>
+      <thead><tr><th>Dir.</th><th>Par</th><th>Entrada</th><th>Cantidad</th><th>Apal.</th><th>TP</th><th>SL</th><th>P&L actual</th><th>Liquidación</th><th></th></tr></thead>
+      <tbody>${posAbiertas.map(o => {
+        const sym = o.par.replace('-USDT','');
+        const cur = livePrice(sym);
+        const mult = o.dir === 'long' ? 1 : -1;
+        const pnl = cur ? mult * (cur - o.entrada) * o.cantidad : null;
+        const liq = o.dir === 'long' ? o.entrada * (1 - 1/o.apal) : o.entrada * (1 + 1/o.apal);
+        const cls = pnl !== null ? (pnl >= 0 ? 'green' : 'red') : '';
+        return `<tr>
+          <td><span class="tag ${o.dir==='long'?'tag-buy':'tag-sell'}">${o.dir==='long'?'Long ▲':'Short ▼'}</span></td>
+          <td>${o.par}</td>
+          <td>${fmtPrice(o.entrada)}</td>
+          <td>${fmt(o.cantidad,4)}</td>
+          <td>${o.apal}x</td>
+          <td class="green">${o.tp ? fmtPrice(o.tp) : '—'}</td>
+          <td class="red">${o.sl ? fmtPrice(o.sl) : '—'}</td>
+          <td class="${cls}">${pnl !== null ? (pnl>=0?'+':'')+fmt(pnl,2)+' USDT' : '—'}</td>
+          <td class="red">${fmtPrice(liq)}</td>
+          <td style="display:flex;gap:4px;">
+            <button onclick="closeFutureOp(${o.id})" class="success" style="height:28px;padding:0 8px;font-size:11px;">Cerrar</button>
+            <button onclick="deleteFutureOp(${o.id})" class="danger" style="height:28px;padding:0 8px;font-size:11px;"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>` : '';
+
+  // Tabla historial futuros
+  const cerradas = futuresOps.filter(o => o.estado === 'cerrada');
+  const histHtml = cerradas.length ? `<div class="card">
+    <div class="card-title">Historial de operaciones cerradas</div>
+    <div class="ovx"><table>
+      <thead><tr><th>Dir.</th><th>Par</th><th>Entrada</th><th>Cierre</th><th>Cantidad</th><th>Apal.</th><th>P&L</th><th>Fecha</th><th>Notas</th></tr></thead>
+      <tbody>${cerradas.map(o => {
+        const cls = (o.pnl||0) >= 0 ? 'green' : 'red';
+        return `<tr>
+          <td><span class="tag ${o.dir==='long'?'tag-buy':'tag-sell'}">${o.dir==='long'?'Long ▲':'Short ▼'}</span></td>
+          <td>${o.par}</td>
+          <td>${fmtPrice(o.entrada)}</td>
+          <td>${fmtPrice(o.cierre)}</td>
+          <td>${fmt(o.cantidad,4)}</td>
+          <td>${o.apal}x</td>
+          <td class="${cls}">${(o.pnl||0)>=0?'+':''}${fmt(o.pnl||0,2)} USDT</td>
+          <td>${o.fecha}</td>
+          <td class="muted small">${o.notas||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>` : '';
+
+  document.getElementById('futurosContent').innerHTML = saldoHtml + formHtml + simHtml + abiertasHtml + histHtml;
+}
+
+function editFutSaldo() {
+  const v = prompt('Saldo actual de tu cuenta de futuros (USDT):', futuresSaldo);
+  if (v === null) return;
+  const n = parseFloat(v);
+  if (isNaN(n)) return;
+  futuresSaldo = n;
+  renderFuturos();
+  scheduleSave();
+}
+
+function ftCargarPrecio() {
+  const par = document.getElementById('ftPar').value;
+  const sym = par.replace('-USDT','');
+  const p = prices[sym]?.price;
+  if (p) {
+    document.getElementById('ftEntrada').value = p;
+    document.getElementById('ftMsg').textContent = 'Precio actual cargado: ' + fmtPrice(p) + ' USDT';
+  } else {
+    document.getElementById('ftMsg').textContent = 'Precio no disponible, introdúcelo manualmente.';
+  }
+}
+
+function addFutureOp() {
+  const dir = document.getElementById('ftDir').value;
+  const par = document.getElementById('ftPar').value;
+  const entrada = parseFloat(document.getElementById('ftEntrada').value);
+  const cantidad = parseFloat(document.getElementById('ftCantidad').value);
+  const apal = parseFloat(document.getElementById('ftApal').value);
+  const tp = parseFloat(document.getElementById('ftTP').value) || null;
+  const sl = parseFloat(document.getElementById('ftSL').value) || null;
+  const fecha = document.getElementById('ftFecha').value;
+  const notas = document.getElementById('ftNotas').value;
+  if (isNaN(entrada) || isNaN(cantidad) || isNaN(apal) || !fecha) {
+    document.getElementById('ftMsg').textContent = 'Completa entrada, cantidad, apalancamiento y fecha.';
+    return;
+  }
+  futuresOps.push({ id: Date.now(), dir, par, entrada, cantidad, apal, tp, sl, fecha, notas, estado: 'abierta' });
+  document.getElementById('ftMsg').innerHTML = '<span class="green">✓</span> Operación añadida correctamente.';
+  document.getElementById('ftEntrada').value = '';
+  document.getElementById('ftCantidad').value = '';
+  document.getElementById('ftApal').value = '';
+  document.getElementById('ftTP').value = '';
+  document.getElementById('ftSL').value = '';
+  document.getElementById('ftNotas').value = '';
+  renderFuturos();
+  scheduleSave();
+}
+
+function closeFutureOp(id) {
+  const op = futuresOps.find(o => o.id === id);
+  if (!op) return;
+  const precioStr = prompt('Precio de cierre de la operación:', prices[op.par.replace('-USDT','')]?.price || '');
+  if (precioStr === null) return;
+  const cierre = parseFloat(precioStr);
+  if (isNaN(cierre)) return;
+  const mult = op.dir === 'long' ? 1 : -1;
+  op.pnl = mult * (cierre - op.entrada) * op.cantidad;
+  op.cierre = cierre;
+  op.estado = 'cerrada';
+  futuresSaldo += op.pnl;
+  renderFuturos();
+  scheduleSave();
+  showToast((op.pnl >= 0 ? '✓ Ganancia: +' : '✗ Pérdida: ') + fmt(op.pnl, 2) + ' USDT');
+}
+
+function deleteFutureOp(id) {
+  if (!confirm('¿Eliminar esta operación?')) return;
+  futuresOps = futuresOps.filter(o => o.id !== id);
+  renderFuturos();
+  scheduleSave();
+}
+
+function runFutSim() {
+  const dir = document.getElementById('fsDir').value;
+  const par = document.getElementById('fsPar').value;
+  const entrada = parseFloat(document.getElementById('fsEntrada').value);
+  const cantidad = parseFloat(document.getElementById('fsCantidad').value);
+  const apal = parseFloat(document.getElementById('fsApal').value);
+  const tp = parseFloat(document.getElementById('fsTP').value);
+  const sl = parseFloat(document.getElementById('fsSL').value);
+  if (isNaN(entrada) || isNaN(cantidad) || isNaN(apal)) {
+    document.getElementById('fsResult').innerHTML = '<div class="muted small" style="margin-top:8px;">Introduce entrada, cantidad y apalancamiento.</div>';
+    return;
+  }
+  const margen = (entrada * cantidad) / apal;
+  const liq = dir === 'long' ? entrada * (1 - 1/apal) : entrada * (1 + 1/apal);
+  const mult = dir === 'long' ? 1 : -1;
+  const pnlTP = !isNaN(tp) ? mult * (tp - entrada) * cantidad : null;
+  const pnlSL = !isNaN(sl) ? mult * (sl - entrada) * cantidad : null;
+  const rr = pnlTP !== null && pnlSL !== null ? Math.abs(pnlTP / pnlSL) : null;
+  const dirLabel = dir === 'long' ? 'Long ▲' : 'Short ▼';
+  const liqCls = dir === 'long' ? 'red' : 'green';
+
+  document.getElementById('fsResult').innerHTML = `<div class="sim-result-box" style="margin-top:1rem;">
+    <div class="sim-row"><span>Dirección</span><span><span class="tag ${dir==='long'?'tag-buy':'tag-sell'}">${dirLabel}</span></span></div>
+    <div class="sim-row"><span>Par</span><span>${par}</span></div>
+    <div class="sim-row"><span>Precio entrada</span><span>${fmtPrice(entrada)} USDT</span></div>
+    <div class="sim-row"><span>Cantidad</span><span>${fmt(cantidad,4)}</span></div>
+    <div class="sim-row"><span>Apalancamiento</span><span>${apal}x</span></div>
+    <div class="sim-row"><span>Margen necesario</span><span style="font-weight:600;">${fmt(margen,2)} USDT</span></div>
+    <div class="sim-row"><span class="${liqCls}">Precio de liquidación</span><span class="${liqCls}" style="font-weight:600;">${fmtPrice(liq)} USDT</span></div>
+    ${pnlTP !== null ? `<div class="sim-row"><span class="green">P&L en Take Profit (${fmtPrice(tp)})</span><span class="green">+${fmt(pnlTP,2)} USDT (${fmt(pnlTP/margen*100,1)}% del margen)</span></div>` : ''}
+    ${pnlSL !== null ? `<div class="sim-row"><span class="red">P&L en Stop Loss (${fmtPrice(sl)})</span><span class="red">${fmt(pnlSL,2)} USDT (${fmt(pnlSL/margen*100,1)}% del margen)</span></div>` : ''}
+    ${rr !== null ? `<div class="sim-row"><span>Ratio Riesgo/Beneficio</span><span style="font-weight:600;">1 : ${fmt(rr,2)}</span></div>` : ''}
+  </div>`;
 }
 loadData();
 populateSymSelects();
