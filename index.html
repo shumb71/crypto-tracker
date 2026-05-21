@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Portfolio Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: #f8f9fa; color: #1a1a1a; }
+.app { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 8px; }
+.header h1 { font-size: 18px; font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sync-bar { font-size: 11px; color: #888; display: flex; align-items: center; gap: 6px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.drive-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 12px; color: #555; height: 30px; transition: all 0.15s; }
+.drive-btn:hover { background: #f3f4f6; }
+.drive-btn.connected { border-color: #bbf7d0; background: #f0fdf4; color: #16a34a; }
+.drive-btn.saving { border-color: #bfdbfe; background: #eff6ff; color: #2563eb; }
+.nav { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; }
+.nav-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; cursor: pointer; font-size: 13px; color: #555; transition: all 0.15s; }
+.nav-btn:hover { background: #f3f4f6; }
+.nav-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 14px; }
+.card-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+.metric { background: #f8f9fa; border-radius: 8px; padding: 0.75rem 1rem; }
+.metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.metric-value { font-size: 16px; font-weight: 500; }
+.green { color: #16a34a; }
+.red { color: #dc2626; }
+.muted { color: #888; }
+.small { font-size: 12px; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+input, select { font-size: 13px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #1a1a1a; height: 34px; outline: none; }
+input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+input[type="number"] { width: 130px; }
+input[type="date"] { width: 148px; }
+input[type="text"] { width: 110px; }
+select { width: 115px; }
+button { padding: 6px 14px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 13px; color: #1a1a1a; height: 34px; transition: all 0.15s; white-space: nowrap; }
+button:hover { background: #f3f4f6; }
+button.primary { background: #6366f1; color: #fff; border-color: #6366f1; }
+button.primary:hover { background: #4f46e5; }
+button.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+button.danger:hover { background: #fee2e2; }
+button.success { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+button.success:hover { background: #dcfce7; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: #888; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; font-size: 11px; white-space: nowrap; }
+td { padding: 8px 8px; border-bottom: 1px solid #f9f9f9; }
+tr:last-child td { border-bottom: none; }
+.tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
+.tag-buy { background: #f0fdf4; color: #16a34a; }
+.tag-sell { background: #fef2f2; color: #dc2626; }
+.sym-badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: #f3f4f6; color: #555; }
+.ticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
+.ticker-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; }
+.ticker-sym { font-size: 11px; color: #888; font-weight: 500; }
+.ticker-price { font-size: 15px; font-weight: 500; margin: 3px 0 2px; }
+.ticker-chg { font-size: 12px; }
+.sym-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+.sym-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 99px; font-size: 12px; cursor: pointer; }
+.sym-chip:hover { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
+.sim-result-box { background: #f8f9fa; border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+.sim-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+.sim-row:last-child { border-bottom: none; font-weight: 500; font-size: 14px; }
+.hidden { display: none; }
+.ovx { overflow-x: auto; }
+.toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1a1a1a; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; }
+.toast.show { opacity: 1; }
+.concepto-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:16px; }
+.concepto-title { font-size:16px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.concepto-badge { font-size:11px; padding:2px 10px; border-radius:99px; background:#eff6ff; color:#2563eb; font-weight:500; }
+.concepto-desc { color:#444; line-height:1.65; font-size:13.5px; }
+.concepto-subtitulo { font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px; }
+.concepto-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0; }
+.concepto-item { background:#f8f9fa; border-radius:8px; padding:10px 12px; }
+.concepto-item-title { font-size:12px; font-weight:600; margin-bottom:3px; }
+.concepto-item-desc { font-size:12px; color:#555; line-height:1.5; }
+.concepto-alerta { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px; font-size:12px; color:#92400e; margin-top:10px; }
+.onda-diagram { display:flex; align-items:flex-end; gap:2px; height:80px; margin:12px 0; }
+.onda-bar { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+.onda-num { font-size:11px; font-weight:600; margin-top:4px; }
+.div-example { display:flex; gap:16px; margin:10px 0; flex-wrap:wrap; }
+.div-box { flex:1; min-width:160px; background:#f8f9fa; border-radius:8px; padding:10px 12px; }
+.div-box-title { font-size:12px; font-weight:600; margin-bottom:4px; }
+.div-box-desc { font-size:12px; color:#555; }
+.libro-table th.col-debe { color: #dc2626; }
+.libro-table th.col-haber { color: #16a34a; }
+.libro-table td.debe { color: #dc2626; font-weight:500; }
+.libro-table td.haber { color: #16a34a; font-weight:500; }
+.libro-table td.saldo-pos { color: #16a34a; font-weight:600; }
+.libro-table td.saldo-neg { color: #dc2626; font-weight:600; }
+.libro-table tr.total-row { background: #f8f9fa; font-weight:600; border-top: 2px solid #e5e7eb; }
+.libro-table tr.excluded { opacity: 0.4; text-decoration: line-through; }
+.libro-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#888; }
+.libro-toggle input { width:14px; height:14px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Crypto Portfolio Tracker</h1>
+    <div class="header-right">
+      <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
+      <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
+        <i class="ti ti-brand-google-drive"></i>
+        <span id="driveBtnText">Conectar Drive</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showSection('precios',this)"><i class="ti ti-chart-line"></i> Precios</button>
+    <button class="nav-btn" onclick="showSection('operaciones',this)"><i class="ti ti-list"></i> Operaciones</button>
+    <button class="nav-btn" onclick="showSection('portfolio',this)"><i class="ti ti-wallet"></i> Portfolio</button>
+    <button class="nav-btn" onclick="showSection('simulador',this)"><i class="ti ti-calculator"></i> Simulador</button>
+    <button class="nav-btn" onclick="showSection('historial',this)"><i class="ti ti-history"></i> Historial</button>
+    <button class="nav-btn" onclick="showSection('libro',this)"><i class="ti ti-book"></i> Libro</button>
+    <button class="nav-btn" onclick="showSection('conceptos',this)"><i class="ti ti-bulb"></i> Conceptos</button>
+  </nav>
+
+  <div id="precios" class="section active">
+    <div class="card">
+      <div class="card-title">Gestionar monedas</div>
+      <div class="sym-chips" id="symChips"></div>
+      <div class="row">
+        <input type="text" id="newSym" placeholder="Ej: DOGE" />
+        <button onclick="addSymbol()"><i class="ti ti-plus"></i> Añadir</button>
+      </div>
+    </div>
+    <div class="ticker-grid" id="tickerGrid"></div>
+  </div>
+
+  <div id="operaciones" class="section">
+    <div class="card">
+      <div class="card-title">Nueva operación</div>
+      <div class="row">
+        <select id="opType"><option value="buy">Compra</option><option value="sell">Venta</option></select>
+        <select id="opSym"></select>
+        <input type="number" id="opQty" placeholder="Cantidad" step="any" />
+        <input type="date" id="opDate" />
+        <button onclick="loadPriceForDate()"><i class="ti ti-cloud-download"></i> Cargar precio</button>
+      </div>
+      <div class="row">
+        <input type="number" id="opPrice" placeholder="Precio USDT" step="any" />
+        <button class="primary" onclick="addOperation()"><i class="ti ti-plus"></i> Añadir operación</button>
+      </div>
+      <div id="opMsg" class="small muted" style="margin-top:4px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Operaciones registradas</div>
+      <div class="ovx">
+        <table>
+          <thead><tr><th>Tipo</th><th>Símbolo</th><th>Cantidad</th><th>Precio USDT</th><th>Total USDT</th><th>Fecha</th><th></th></tr></thead>
+          <tbody id="opsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="portfolio" class="section">
+    <div id="portfolioContent"></div>
+  </div>
+
+  <div id="simulador" class="section">
+    <div class="card">
+      <div class="card-title">Simulador de venta</div>
+      <div class="row">
+        <select id="simSym"></select>
+        <input type="number" id="simPrice" placeholder="Precio venta USDT" step="any" style="width:170px;" />
+        <select id="simMode" onchange="toggleSimQty()">
+          <option value="all">Todo el activo</option>
+          <option value="partial">Cantidad específica</option>
+        </select>
+        <input type="number" id="simQty" placeholder="Cantidad" step="any" class="hidden" />
+        <button class="primary" onclick="runSim()"><i class="ti ti-calculator"></i> Simular</button>
+      </div>
+      <div id="simResult"></div>
+    </div>
+  </div>
+
+  <div id="historial" class="section">
+    <div class="card">
+      <div class="card-title">Ventas realizadas</div>
+      <div class="ovx">
+        <table>
+          <thead><tr><th>Símbolo</th><th>Cantidad</th><th>Precio venta</th><th>Coste base</th><th>P&L USDT</th><th>P&L %</th><th>Fecha</th></tr></thead>
+          <tbody id="histTable"></tbody>
+        </table>
+      </div>
+      <div id="histEmpty" class="muted small" style="padding:0.75rem 0;">No hay ventas registradas.</div>
+    </div>
+  </div>
+</div>
+  <div id="libro" class="section">
+    <div id="libroContent"></div>
+  </div>
+  <div id="conceptos" class="section">
+    <div id="conceptosContent"></div>
+  </div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+const CLIENT_ID = '906920921997-8db6mc841ls32ucitrtdavglqu64j16e.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILE_NAME = 'crypto_tracker_data.json';
+const DRIVE_FOLDER_NAME = 'CryptoTracker';
+
+let symbols = ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE'];
+let prices = {};
+let operations = [];
+let saleHistory = [];
+let lastSaved = null;
+let accessToken = null;
+let driveFileId = null;
+let saveTimer = null;
+let tokenClient = null;
+
+function showToast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function fmt(n, d=2) {
+  if (isNaN(n)) return '—';
+  return Number(n).toLocaleString('es-ES', {minimumFractionDigits: d, maximumFractionDigits: d});
+}
+function fmtPrice(n) {
+  if (!n || isNaN(n)) return '—';
+  if (n >= 1000) return fmt(n, 2);
+  if (n >= 1) return fmt(n, 4);
+  return fmt(n, 6);
+}
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'portfolio') renderPortfolio();
+  if (id === 'simulador') populateSimSelect();
+  if (id === 'historial') renderHistory();
+  if (id === 'libro') renderLibro();
+  if (id === 'conceptos') renderConceptos();
+  if (id === 'operaciones') { renderOpsTable(); populateSymSelects(); }
+}
+
+async function fetchPrices() {
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    const data = await res.json();
+    data.forEach(t => {
+      const sym = t.symbol.replace('USDT','');
+      if (symbols.includes(sym)) {
+        prices[sym] = { price: parseFloat(t.lastPrice), change: parseFloat(t.priceChangePercent) };
+      }
+    });
+    renderTickers();
+    refreshAll();
+    updateSyncBar();
+  } catch(e) {
+    document.getElementById('syncBar').innerHTML = '<span style="color:#dc2626">Error de conexión</span>';
+  }
+}
+
+function updateSyncBar() {
+  const now = new Date().toLocaleTimeString('es-ES');
+  const driveStatus = accessToken
+    ? (lastSaved ? `Drive: ${lastSaved}` : 'Drive conectado')
+    : 'Sin Drive (local)';
+  document.getElementById('syncBar').innerHTML = `<span class="live-dot"></span>Precios: ${now} | ${driveStatus}`;
+}
+
+function renderTickers() {
+  document.getElementById('tickerGrid').innerHTML = symbols.map(s => {
+    const p = prices[s];
+    if (!p) return `<div class="ticker-card"><div class="ticker-sym">${s}/USDT</div><div class="ticker-price muted">—</div></div>`;
+    const cls = p.change >= 0 ? 'green' : 'red';
+    return `<div class="ticker-card">
+      <div class="ticker-sym">${s}/USDT</div>
+      <div class="ticker-price">${fmtPrice(p.price)}</div>
+      <div class="ticker-chg ${cls}">${p.change >= 0 ? '+' : ''}${fmt(p.change,2)}% 24h</div>
+    </div>`;
+  }).join('');
+  renderSymChips();
+  populateSymSelects();
+}
+
+function renderSymChips() {
+  document.getElementById('symChips').innerHTML = symbols.map(s =>
+    `<span class="sym-chip" onclick="removeSymbol('${s}')" title="Click para eliminar"><i class="ti ti-x" style="font-size:10px"></i> ${s}</span>`
+  ).join('');
+}
+
+function addSymbol() {
+  const val = document.getElementById('newSym').value.trim().toUpperCase();
+  if (!val || symbols.includes(val)) return;
+  symbols.push(val);
+  document.getElementById('newSym').value = '';
+  fetchPrices();
+  scheduleSave();
+}
+
+function removeSymbol(s) {
+  symbols = symbols.filter(x => x !== s);
+  delete prices[s];
+  renderTickers();
+  scheduleSave();
+}
+
+function populateSymSelects() {
+  ['opSym','simSym'].forEach(id => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = symbols.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+  });
+}
+
+async function loadPriceForDate() {
+  const date = document.getElementById('opDate').value;
+  const sym = document.getElementById('opSym').value;
+  if (!date || !sym) { document.getElementById('opMsg').textContent = 'Selecciona símbolo y fecha primero.'; return; }
+  document.getElementById('opMsg').textContent = 'Cargando precio histórico de Binance...';
+  try {
+    const ts = new Date(date + 'T00:00:00Z').getTime();
+    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1d&startTime=${ts}&endTime=${ts+86400000}&limit=1`);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      const close = parseFloat(data[0][4]);
+      document.getElementById('opPrice').value = close;
+      document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> Precio de cierre del ${date}: <strong>${fmtPrice(close)} USDT</strong> — editable si lo necesitas.`;
+    } else {
+      document.getElementById('opMsg').textContent = 'No se encontraron datos para esa fecha.';
+    }
+  } catch(e) {
+    document.getElementById('opMsg').textContent = 'Error al cargar precio.';
+  }
+}
+
+function addOperation() {
+  const type = document.getElementById('opType').value;
+  const sym = document.getElementById('opSym').value;
+  const qty = parseFloat(document.getElementById('opQty').value);
+  const price = parseFloat(document.getElementById('opPrice').value);
+  const date = document.getElementById('opDate').value;
+  if (!sym || isNaN(qty) || qty <= 0 || isNaN(price) || price <= 0 || !date) {
+    document.getElementById('opMsg').textContent = 'Completa todos los campos correctamente.';
+    return;
+  }
+  operations.push({ id: Date.now(), type, sym, qty, price, date });
+  operations.sort((a,b) => a.date.localeCompare(b.date));
+  document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> ${type==='buy'?'Compra':'Venta'} de ${fmt(qty,6)} ${sym} a ${fmtPrice(price)} USDT registrada.`;
+  document.getElementById('opQty').value = '';
+  document.getElementById('opPrice').value = '';
+  renderOpsTable();
+  refreshAll();
+  scheduleSave();
+}
+
+function deleteOp(id) {
+  if (!confirm('¿Eliminar esta operación?')) return;
+  operations = operations.filter(o => o.id !== id);
+  renderOpsTable();
+  refreshAll();
+  scheduleSave();
+}
+
+function editOpPrice(id) {
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+  const newPrice = prompt(`Nuevo precio (actual: ${op.price}):`, op.price);
+  if (newPrice === null) return;
+  const p = parseFloat(newPrice);
+  if (isNaN(p) || p <= 0) { alert('Precio no válido.'); return; }
+  op.price = p;
+  renderOpsTable();
+  refreshAll();
+  scheduleSave();
+}
+
+function refreshAll() {
+  renderPortfolio();
+  populateSimSelect();
+  renderHistory();
+  renderLibro();
+}
+
+function renderOpsTable() {
+  const tbody = document.getElementById('opsTable');
+  if (!operations.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:1rem 0 0.5rem;">No hay operaciones registradas.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = operations.map(o => `
+    <tr>
+      <td><span class="tag ${o.type==='buy'?'tag-buy':'tag-sell'}">${o.type==='buy'?'Compra':'Venta'}</span></td>
+      <td><span class="sym-badge">${o.sym}</span></td>
+      <td>${fmt(o.qty,6)}</td>
+      <td style="cursor:pointer;" onclick="editOpPrice(${o.id})" title="Click para editar">${fmtPrice(o.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
+      <td>${fmt(o.qty*o.price,2)} USDT</td>
+      <td>${o.date}</td>
+      <td><button class="danger" onclick="deleteOp(${o.id})" style="height:28px;padding:0 8px;font-size:11px;"><i class="ti ti-trash"></i></button></td>
+    </tr>
+  `).join('');
+}
+
+function getPortfolio() {
+  const port = {};
+  operations.forEach(o => {
+    if (!port[o.sym]) port[o.sym] = { buys: [], totalQty: 0, totalCost: 0 };
+    if (o.type === 'buy') {
+      port[o.sym].buys.push({...o});
+      port[o.sym].totalQty += o.qty;
+      port[o.sym].totalCost += o.qty * o.price;
+    } else {
+      port[o.sym].totalQty = Math.max(0, port[o.sym].totalQty - o.qty);
+    }
+  });
+  return port;
+}
+
+function renderPortfolio() {
+  const port = getPortfolio();
+  let html = '';
+  let hasAny = false;
+  Object.entries(port).forEach(([sym, data]) => {
+    if (data.totalQty < 0.000001) return;
+    hasAny = true;
+    const avgPrice = data.totalCost / data.totalQty;
+    const curPrice = prices[sym]?.price || 0;
+    const curValue = data.totalQty * curPrice;
+    const pnl = curValue - data.totalCost;
+    const pnlPct = data.totalCost > 0 ? (pnl / data.totalCost) * 100 : 0;
+    const cls = pnl >= 0 ? 'green' : 'red';
+    html += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div>
+          <span style="font-size:17px;font-weight:500;">${sym}</span>
+          <span class="sym-badge" style="margin-left:8px;">${fmt(data.totalQty,6)} ${sym}</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:17px;font-weight:500;">${fmt(curValue,2)} USDT</div>
+          <div class="small ${cls}">${pnl>=0?'+':''}${fmt(pnl,2)} USDT (${pnl>=0?'+':''}${fmt(pnlPct,2)}%)</div>
+        </div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Precio actual</div><div class="metric-value" style="font-size:14px;">${curPrice?fmtPrice(curPrice):'—'}</div></div>
+        <div class="metric"><div class="metric-label">Precio medio ponderado</div><div class="metric-value" style="font-size:14px;">${fmtPrice(avgPrice)}</div></div>
+        <div class="metric"><div class="metric-label">Coste total</div><div class="metric-value" style="font-size:14px;">${fmt(data.totalCost,2)}</div></div>
+        <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${cls}" style="font-size:14px;">${pnl>=0?'+':''}${fmt(pnl,2)}</div></div>
+      </div>
+      <div class="card-title" style="margin-top:4px;">Tramos de compra</div>
+      <div class="ovx"><table>
+        <thead><tr><th>Fecha</th><th>Cantidad</th><th>Precio compra</th><th>Coste</th><th>P&L tramo</th></tr></thead>
+        <tbody>${data.buys.map(b => {
+          const tp = curPrice ? (curPrice-b.price)*b.qty : null;
+          const tc = tp !== null ? (tp>=0?'green':'red') : '';
+          return `<tr>
+            <td>${b.date}</td>
+            <td>${fmt(b.qty,6)}</td>
+            <td style="cursor:pointer;" onclick="editOpPrice(${b.id})" title="Click para editar">${fmtPrice(b.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
+            <td>${fmt(b.qty*b.price,2)} USDT</td>
+            <td class="${tc}">${tp!==null?(tp>=0?'+':'')+fmt(tp,2)+' USDT':'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>`;
+  });
+  document.getElementById('portfolioContent').innerHTML = hasAny ? html : '<div class="card muted">No tienes posiciones abiertas. Añade operaciones de compra en la pestaña Operaciones.</div>';
+}
+
+function toggleSimQty() {
+  document.getElementById('simQty').classList.toggle('hidden', document.getElementById('simMode').value !== 'partial');
+}
+
+function populateSimSelect() {
+  const port = getPortfolio();
+  const active = Object.entries(port).filter(([s,d]) => d.totalQty > 0.000001);
+  const sel = document.getElementById('simSym');
+  sel.innerHTML = active.length
+    ? active.map(([s]) => `<option value="${s}">${s}</option>`).join('')
+    : '<option>Sin posiciones</option>';
+}
+
+function runSim() {
+  const sym = document.getElementById('simSym').value;
+  const sellPrice = parseFloat(document.getElementById('simPrice').value);
+  const mode = document.getElementById('simMode').value;
+  const port = getPortfolio();
+  const data = port[sym];
+  if (!data || data.totalQty < 0.000001) { document.getElementById('simResult').innerHTML = '<div class="muted small" style="margin-top:10px;">No tienes posición en este activo.</div>'; return; }
+  if (isNaN(sellPrice) || sellPrice <= 0) { document.getElementById('simResult').innerHTML = '<div class="muted small" style="margin-top:10px;">Introduce un precio de venta válido.</div>'; return; }
+  let qtyToSell = data.totalQty;
+  if (mode === 'partial') {
+    qtyToSell = parseFloat(document.getElementById('simQty').value);
+    if (isNaN(qtyToSell) || qtyToSell <= 0) qtyToSell = data.totalQty;
+    if (qtyToSell > data.totalQty) qtyToSell = data.totalQty;
+  }
+  const ratio = qtyToSell / data.totalQty;
+  const avgCost = data.totalCost / data.totalQty;
+  const costBasis = qtyToSell * avgCost;
+  const saleValue = qtyToSell * sellPrice;
+  const pnl = saleValue - costBasis;
+  const pnlPct = (pnl / costBasis) * 100;
+  const cls = pnl >= 0 ? 'green' : 'red';
+  const tramoRows = data.buys.map(b => {
+    const qty = b.qty * ratio;
+    const cost = qty * b.price;
+    const val = qty * sellPrice;
+    const tp = val - cost;
+    const tc = tp >= 0 ? 'green' : 'red';
+    return `<tr>
+      <td>${b.date}</td><td>${fmt(qty,6)} ${sym}</td>
+      <td>${fmtPrice(b.price)}</td><td>${fmt(cost,2)} USDT</td>
+      <td>${fmt(val,2)} USDT</td>
+      <td class="${tc}">${tp>=0?'+':''}${fmt(tp,2)} USDT</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('simResult').innerHTML = `
+    <div class="sim-result-box">
+      <div class="sim-row"><span>Cantidad a vender</span><span>${fmt(qtyToSell,6)} ${sym}</span></div>
+      <div class="sim-row"><span>Precio de venta</span><span>${fmtPrice(sellPrice)} USDT</span></div>
+      <div class="sim-row"><span>Valor de venta</span><span>${fmt(saleValue,2)} USDT</span></div>
+      <div class="sim-row"><span>Coste ponderado</span><span>${fmtPrice(avgCost)} USDT</span></div>
+      <div class="sim-row"><span>Coste base</span><span>${fmt(costBasis,2)} USDT</span></div>
+      <div class="sim-row"><span class="${cls}">P&L total</span><span class="${cls}">${pnl>=0?'+':''}${fmt(pnl,2)} USDT (${pnl>=0?'+':''}${fmt(pnlPct,2)}%)</span></div>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">Desglose por tramo de compra</div>
+      <div class="ovx"><table>
+        <thead><tr><th>Fecha compra</th><th>Qty proporcional</th><th>Precio compra</th><th>Coste</th><th>Ingreso</th><th>P&L</th></tr></thead>
+        <tbody>${tramoRows}</tbody>
+      </table></div>
+    </div>
+    <div style="text-align:right;margin-top:12px;">
+      <button class="success" onclick="confirmSell('${sym}',${qtyToSell},${sellPrice},${pnl},${costBasis})"><i class="ti ti-check"></i> Registrar esta venta</button>
+    </div>`;
+}
+
+function confirmSell(sym, qty, price, pnl, costBasis) {
+  const today = new Date().toISOString().slice(0,10);
+  saleHistory.push({ sym, qty, price, pnl, costBasis, date: today, id: Date.now() });
+  operations.push({ id: Date.now()+1, type:'sell', sym, qty, price, date: today });
+  document.getElementById('simResult').innerHTML = '<div class="small green" style="margin-top:10px;"><i class="ti ti-check"></i> Venta registrada. Puedes verla en Historial.</div>';
+  scheduleSave();
+}
+
+function renderHistory() {
+  const tbody = document.getElementById('histTable');
+  const empty = document.getElementById('histEmpty');
+  if (!saleHistory.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  let totalPnl = 0;
+  tbody.innerHTML = saleHistory.map(h => {
+    totalPnl += h.pnl;
+    const cls = h.pnl >= 0 ? 'green' : 'red';
+    const pct = h.costBasis > 0 ? (h.pnl / h.costBasis * 100) : 0;
+    return `<tr>
+      <td><span class="sym-badge">${h.sym}</span></td>
+      <td>${fmt(h.qty,6)}</td>
+      <td>${fmtPrice(h.price)} USDT</td>
+      <td>${fmt(h.costBasis,2)} USDT</td>
+      <td class="${cls}">${h.pnl>=0?'+':''}${fmt(h.pnl,2)} USDT</td>
+      <td class="${cls}">${h.pnl>=0?'+':''}${fmt(pct,2)}%</td>
+      <td>${h.date}</td>
+    </tr>`;
+  }).join('');
+  const totCls = totalPnl >= 0 ? 'green' : 'red';
+  tbody.innerHTML += `<tr style="font-weight:500;border-top:2px solid #e5e7eb;">
+    <td colspan="4">Total P&L realizado</td>
+    <td class="${totCls}" colspan="3">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</td>
+  </tr>`;
+}
+
+/* === GOOGLE DRIVE === */
+function handleDriveAuth() {
+  if (accessToken) {
+    if (confirm('¿Desconectar Google Drive?')) {
+      accessToken = null; driveFileId = null;
+      document.getElementById('driveBtn').className = 'drive-btn';
+      document.getElementById('driveBtnText').textContent = 'Conectar Drive';
+      showToast('Drive desconectado');
+      updateSyncBar();
+    }
+    return;
+  }
+  if (!window.google) { showToast('Google aún cargando, espera un momento...'); setTimeout(handleDriveAuth, 1500); return; }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('Error al conectar: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      document.getElementById('driveBtn').className = 'drive-btn connected';
+      document.getElementById('driveBtnText').textContent = 'Drive conectado';
+      showToast('✓ Google Drive conectado — cargando datos...');
+      await loadFromDrive();
+    }
+  });
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
+async function findOrCreateFolder() {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id)`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const data = await res.json();
+  if (data.files && data.files.length > 0) return data.files[0].id;
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  const folder = await create.json();
+  return folder.id;
+}
+
+async function findOrCreateFile() {
+  const folderId = await findOrCreateFolder();
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}' and '${folderId}' in parents and trashed=false&fields=files(id)`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const data = await res.json();
+  if (data.files && data.files.length > 0) { driveFileId = data.files[0].id; return driveFileId; }
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: DRIVE_FILE_NAME, parents: [folderId] })
+  });
+  const created = await create.json();
+  driveFileId = created.id;
+  return driveFileId;
+}
+
+async function loadFromDrive() {
+  if (!accessToken) return;
+  try {
+    const fileId = await findOrCreateFile();
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (res.status === 200) {
+      const text = await res.text();
+      if (text && text.trim().startsWith('{')) {
+        const d = JSON.parse(text);
+        if (d.operations) operations = d.operations;
+        if (d.saleHistory) saleHistory = d.saleHistory;
+        if (d.symbols) symbols = d.symbols;
+        if (d.lastSaved) lastSaved = d.lastSaved;
+        renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
+        showToast('✓ Datos cargados desde Drive');
+        updateSyncBar();
+      } else {
+        showToast('Drive conectado — carpeta CryptoTracker creada en tu Drive');
+      }
+    }
+  } catch(e) { showToast('Error al leer Drive'); }
+}
+
+async function saveToDrive() {
+  if (!accessToken) { saveToLocal(); return; }
+  try {
+    const btn = document.getElementById('driveBtn');
+    btn.className = 'drive-btn saving';
+    document.getElementById('driveBtnText').textContent = 'Guardando...';
+    const fileId = driveFileId || await findOrCreateFile();
+    lastSaved = new Date().toLocaleTimeString('es-ES');
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved })
+    });
+    saveToLocal();
+    btn.className = 'drive-btn connected';
+    document.getElementById('driveBtnText').textContent = 'Drive conectado';
+    updateSyncBar();
+    showToast('✓ Guardado en Drive: ' + lastSaved);
+  } catch(e) {
+    showToast('Error al guardar en Drive');
+    saveToLocal();
+    document.getElementById('driveBtn').className = 'drive-btn connected';
+    document.getElementById('driveBtnText').textContent = 'Drive conectado';
+  }
+}
+
+function saveToLocal() {
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved })); } catch(e) {}
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveToDrive(), 1500);
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('crypto_tracker_v2');
+    if (saved) {
+      const d = JSON.parse(saved);
+      if (d.operations) operations = d.operations;
+      if (d.saleHistory) saleHistory = d.saleHistory;
+      if (d.symbols) symbols = d.symbols;
+      if (d.lastSaved) lastSaved = d.lastSaved;
+    }
+  } catch(e) {}
+}
+
+
+function toggleLibroOp(id) {
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+  op.excluded = !op.excluded;
+  renderLibro();
+  scheduleSave();
+}
+
+function renderLibro() {
+  const syms = [...new Set(operations.map(o => o.sym))];
+  if (!syms.length) {
+    document.getElementById('libroContent').innerHTML = '<div class="card muted">No hay operaciones registradas.</div>';
+    return;
+  }
+  let html = '';
+  syms.forEach(sym => {
+    const ops = operations.filter(o => o.sym === sym).sort((a,b) => a.date.localeCompare(b.date));
+    let saldo = 0;
+    let totalDebe = 0;
+    let totalHaber = 0;
+    const rows = ops.map(o => {
+      const total = o.qty * o.price;
+      const excluded = o.excluded || false;
+      let debe = null, haber = null;
+      if (!excluded) {
+        if (o.type === 'buy') { debe = total; saldo -= total; totalDebe += total; }
+        else { haber = total; saldo += total; totalHaber += total; }
+      }
+      const saldoClass = saldo >= 0 ? 'saldo-pos' : 'saldo-neg';
+      const exClass = excluded ? 'excluded' : '';
+      const checked = excluded ? '' : 'checked';
+      const saldoCell = excluded ? '—' : (saldo >= 0 ? '+' : '') + fmt(saldo, 2) + ' USDT';
+      return '<tr class="' + exClass + '">'
+        + '<td><label class="libro-toggle"><input type="checkbox" ' + checked + ' onchange="toggleLibroOp(' + o.id + ')"> Incluir</label></td>'
+        + '<td>' + o.date + '</td>'
+        + '<td><span class="tag ' + (o.type === 'buy' ? 'tag-buy' : 'tag-sell') + '">' + (o.type === 'buy' ? 'Compra' : 'Venta') + '</span></td>'
+        + '<td>' + fmt(o.qty, 6) + ' ' + sym + '</td>'
+        + '<td>' + fmtPrice(o.price) + ' USDT</td>'
+        + '<td class="debe">' + (debe !== null ? fmt(debe, 2) + ' USDT' : '—') + '</td>'
+        + '<td class="haber">' + (haber !== null ? fmt(haber, 2) + ' USDT' : '—') + '</td>'
+        + '<td class="' + (excluded ? '' : saldoClass) + '">' + saldoCell + '</td>'
+        + '</tr>';
+    }).join('');
+    const resultado = totalHaber - totalDebe;
+    const resClass = resultado >= 0 ? 'saldo-pos' : 'saldo-neg';
+    html += '<div class="card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+      + '<span style="font-size:16px;font-weight:500;">' + sym + '</span>'
+      + '<span class="small muted">' + ops.length + ' operaciones &nbsp;|&nbsp; Resultado: <span class="' + resClass + '">' + (resultado >= 0 ? '+' : '') + fmt(resultado, 2) + ' USDT</span></span>'
+      + '</div>'
+      + '<div class="ovx"><table class="libro-table">'
+      + '<thead><tr>'
+      + '<th style="width:80px;">Incluir</th>'
+      + '<th>Fecha</th><th>Tipo</th><th>Cantidad</th><th>Precio</th>'
+      + '<th class="col-debe">Debe (inversión)</th>'
+      + '<th class="col-haber">Haber (recuperado)</th>'
+      + '<th>Saldo acumulado</th>'
+      + '</tr></thead>'
+      + '<tbody>' + rows + '</tbody>'
+      + '<tfoot><tr class="total-row">'
+      + '<td colspan="5">Totales ' + sym + '</td>'
+      + '<td class="debe">' + fmt(totalDebe, 2) + ' USDT</td>'
+      + '<td class="haber">' + fmt(totalHaber, 2) + ' USDT</td>'
+      + '<td class="' + resClass + '">' + (resultado >= 0 ? '+' : '') + fmt(resultado, 2) + ' USDT</td>'
+      + '</tr></tfoot>'
+      + '</table></div></div>';
+  });
+  document.getElementById('libroContent').innerHTML = html;
+}
+
+function renderConceptos() {
+  const conceptos = [
+    {
+      num: '01',
+      titulo: 'Gap y Relleno de Gap',
+      badge: 'Análisis técnico',
+      intro: 'Un gap (hueco) es una zona del gráfico donde el precio saltó de un nivel a otro sin cotizar en medio — se ve como un espacio vacío entre velas. La teoría dice que el precio tiende a volver a esa zona para "cubrirla", porque quedaron órdenes sin ejecutar y liquidez pendiente.',
+      secciones: [
+        {
+          titulo: 'Tipos de gap en cripto',
+          items: [
+            { t: 'Gap CME (fin de semana)', d: 'BTC cotiza 24/7 pero los futuros de CME cierran el viernes y abren el lunes. Si el precio se mueve en fin de semana, deja un gap que estadísticamente se rellena con frecuencia.' },
+            { t: 'Gap en gráfico spot', d: 'Salto brusco entre una vela y la siguiente, normalmente por noticias importantes o liquidaciones en cascada.' }
+          ]
+        }
+      ],
+      alerta: 'No es una ley: hay gaps que tardan meses en rellenarse y algunos que nunca se rellenan. Úsalo como zona de interés, no como certeza.'
+    },
+    {
+      num: '02',
+      titulo: 'Cobertura (Hedge)',
+      badge: 'Gestión de riesgo',
+      intro: 'Una cobertura es una operación que abres para protegerte de una posición que ya tienes, reduciendo el riesgo de pérdida. Si tienes BTC comprado y temes una bajada, abres un corto en futuros para que las ganancias del corto compensen las pérdidas del spot.',
+      secciones: [
+        {
+          titulo: 'Tipos de cobertura',
+          items: [
+            { t: 'Cobertura total', d: 'Cubres el 100% de tu posición. Quedas neutral: no pierdes pero tampoco ganas si sube.' },
+            { t: 'Cobertura parcial', d: 'Cubres solo una parte. Reduces el riesgo pero mantienes exposición a la subida.' },
+            { t: 'Cobertura cruzada', d: 'Cubres BTC con ETH u otra cripto correlacionada. Menos preciso pero útil si no tienes futuros de ese activo.' }
+          ]
+        }
+      ],
+      alerta: 'Mantener una cobertura en futuros perpetuos tiene un coste llamado funding rate. Si la posición dura mucho puede erosionar el beneficio.'
+    },
+    {
+      num: '03',
+      titulo: 'Ondas de Elliott',
+      badge: 'Análisis técnico',
+      intro: 'Teoría que dice que el precio se mueve en patrones repetitivos de 8 ondas impulsados por la psicología colectiva: 5 ondas de impulso (a favor de la tendencia) y 3 ondas correctivas (en contra).',
+      secciones: [
+        {
+          titulo: '5 Ondas de impulso',
+          items: [
+            { t: 'Onda 1', d: 'Primer movimiento alcista. Poca gente lo detecta.' },
+            { t: 'Onda 2', d: 'Corrección. El precio retrocede pero no supera el origen de la onda 1.' },
+            { t: 'Onda 3', d: 'La más fuerte y larga. Donde entra la mayoría. Nunca es la más corta.' },
+            { t: 'Onda 4', d: 'Corrección suave. No entra en territorio de la onda 1.' },
+            { t: 'Onda 5', d: 'Último impulso con menos fuerza. Suele haber euforia. Señal de agotamiento.' }
+          ]
+        },
+        {
+          titulo: '3 Ondas correctivas (A, B, C)',
+          items: [
+            { t: 'Onda A', d: 'Primera bajada tras el impulso.' },
+            { t: 'Onda B', d: 'Rebote trampa: parece que la subida continúa pero es falso.' },
+            { t: 'Onda C', d: 'Bajada fuerte que confirma la corrección.' }
+          ]
+        }
+      ],
+      alerta: 'Es subjetiva: dos analistas pueden contar las ondas de forma diferente en el mismo gráfico. Combínala con otros indicadores.'
+    },
+    {
+      num: '04',
+      titulo: 'Divergencias y Convergencias',
+      badge: 'Indicadores',
+      intro: 'Se detectan comparando el movimiento del precio con el de un indicador (RSI, MACD, estocástico). Avisan de posibles cambios de tendencia o de su continuación.',
+      secciones: [
+        {
+          titulo: 'Tipos',
+          items: [
+            { t: 'Divergencia bajista', d: 'El precio hace un máximo más alto pero el indicador hace un máximo más bajo. La fuerza compradora se agota aunque el precio siga subiendo. Posible giro a la baja.' },
+            { t: 'Divergencia alcista', d: 'El precio hace un mínimo más bajo pero el indicador hace un mínimo más alto. La caída pierde fuerza. Posible giro al alza.' },
+            { t: 'Convergencia', d: 'Precio e indicador van en la misma dirección. Confirma que la tendencia tiene fuerza y puede continuar.' }
+          ]
+        },
+        {
+          titulo: 'Indicadores donde más se usan',
+          items: [
+            { t: 'RSI', d: 'El más común para detectar divergencias.' },
+            { t: 'MACD', d: 'Útil para divergencias en tendencias más largas.' },
+            { t: 'Estocástico', d: 'Especialmente útil en rangos laterales.' }
+          ]
+        }
+      ],
+      alerta: 'Una divergencia puede durar varias velas antes de resolverse. No es señal de entrada inmediata, sino una alerta de debilidad en el movimiento.'
+    }
+  ];
+
+  const html = conceptos.map(c => {
+    const seccionesHtml = c.secciones.map(s =>
+      '<div class="concepto-subtitulo">' + s.titulo + '</div>'
+      + '<div class="concepto-grid">'
+      + s.items.map(i =>
+        '<div class="concepto-item"><div class="concepto-item-title">' + i.t + '</div><div class="concepto-item-desc">' + i.d + '</div></div>'
+      ).join('')
+      + '</div>'
+    ).join('');
+    return '<div class="concepto-card">'
+      + '<div class="concepto-title"><span style="font-size:13px;color:#aaa;font-weight:400;">' + c.num + '</span> ' + c.titulo
+      + ' <span class="concepto-badge">' + c.badge + '</span></div>'
+      + '<div class="concepto-desc" style="margin-bottom:8px;">' + c.intro + '</div>'
+      + seccionesHtml
+      + '<div class="concepto-alerta">⚠️ ' + c.alerta + '</div>'
+      + '</div>';
+  }).join('');
+
+  document.getElementById('conceptosContent').innerHTML = html;
+}
+loadData();
+populateSymSelects();
+renderOpsTable();
+fetchPrices();
+setInterval(fetchPrices, 15000);
+</script>
+</body>
+</html>
