@@ -526,28 +526,50 @@ function addBuyLink(sellId, sym) {
   if (!buyId || isNaN(qty) || qty <= 0) return;
 
   if (!portfolioMatches[sellId]) portfolioMatches[sellId] = [];
-  // If buyId already linked, update qty
   const existing = portfolioMatches[sellId].find(l => l.buyId === buyId);
   if (existing) { existing.qty = qty; }
   else { portfolioMatches[sellId].push({buyId, qty}); }
+  casarOpen[sellId] = true; // keep panel open after adding
+  scheduleSave();
   renderPortfolio();
 }
 
 function removeBuyLink(sellId, buyId) {
   if (!portfolioMatches[sellId]) return;
   portfolioMatches[sellId] = portfolioMatches[sellId].filter(l => l.buyId !== buyId);
+  scheduleSave();
   renderPortfolio();
 }
 
 function clearSellLinks(sellId) {
   delete portfolioMatches[sellId];
+  scheduleSave();
   renderPortfolio();
 }
 
 function toggleCasarSelector(sellId) {
   const box = document.getElementById('casar_' + sellId);
   if (!box) return;
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  const opening = box.style.display === 'none';
+  box.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const selEl = document.getElementById('newlink_buy_' + sellId);
+    if (selEl) onNewLinkBuyChange(sellId, selEl.dataset.sym);
+  }
+}
+
+// Track which casar panels are open so renderPortfolio can restore them
+let casarOpen = {};
+
+function toggleCasarSelectorTracked(sellId) {
+  casarOpen[sellId] = !casarOpen[sellId];
+  const box = document.getElementById('casar_' + sellId);
+  if (!box) return;
+  box.style.display = casarOpen[sellId] ? 'block' : 'none';
+  if (casarOpen[sellId]) {
+    const selEl = document.getElementById('newlink_buy_' + sellId);
+    if (selEl) onNewLinkBuyChange(sellId, selEl.dataset.sym);
+  }
 }
 
 // When user picks a buy in the add-link selector, auto-fill proposed qty
@@ -712,7 +734,7 @@ function renderPortfolio() {
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               ${estadoBadge}${pnlTxt}
-              <button style="height:26px;padding:0 10px;font-size:11px;" onclick="toggleCasarSelector(${sell.id})">
+              <button style="height:26px;padding:0 10px;font-size:11px;" onclick="toggleCasarSelectorTracked(${sell.id})">
                 <i class="ti ti-link"></i> ${hasSome?'Editar':'Casar'}
               </button>
               ${hasSome?`<button class="danger" style="height:26px;padding:0 10px;font-size:11px;" onclick="clearSellLinks(${sell.id})">Limpiar</button>`:''}
@@ -754,7 +776,7 @@ function renderPortfolio() {
         html += `<div id="casar_${sell.id}" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
           <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">Añadir compra asignada</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <select id="newlink_buy_${sell.id}" style="flex:2;min-width:220px;font-size:12px;" onchange="onNewLinkBuyChange(${sell.id},'${sym}')">${opts}</select>
+            <select id="newlink_buy_${sell.id}" data-sym="${sym}" data-sellid="${sell.id}" style="flex:2;min-width:220px;font-size:12px;" onchange="onNewLinkBuyChange(${sell.id},'${sym}')">${opts}</select>
             <input id="newlink_qty_${sell.id}" type="number" step="any" value="${proposed}" style="width:110px;font-size:12px;" placeholder="Cantidad">
             <button class="primary" style="height:30px;padding:0 12px;font-size:12px;" onclick="addBuyLink(${sell.id},'${sym}')">Añadir</button>
           </div>
@@ -773,6 +795,18 @@ function renderPortfolio() {
   document.getElementById('portfolioContent').innerHTML = hasAny
     ? html
     : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>';
+
+  // Restore open casar panels and trigger auto-fill
+  Object.keys(casarOpen).forEach(sellId => {
+    if (casarOpen[sellId]) {
+      const box = document.getElementById('casar_' + sellId);
+      if (box) {
+        box.style.display = 'block';
+        const selEl = document.getElementById('newlink_buy_' + sellId);
+        if (selEl) onNewLinkBuyChange(parseInt(sellId), selEl.dataset.sym);
+      }
+    }
+  });
 }
 
 
@@ -958,6 +992,7 @@ async function loadFromDrive() {
         if (d.lastSaved) lastSaved = d.lastSaved;
         if (d.futuresOps) futuresOps = d.futuresOps;
         if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
+        if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
         renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
         showToast('✓ Datos cargados desde Drive');
         updateSyncBar();
@@ -979,7 +1014,7 @@ async function saveToDrive() {
     await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo })
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches })
     });
     saveToLocal();
     btn.className = 'drive-btn connected';
@@ -995,7 +1030,7 @@ async function saveToDrive() {
 }
 
 function saveToLocal() {
-  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo })); } catch(e) {}
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches })); } catch(e) {}
 }
 
 function scheduleSave() {
@@ -1014,6 +1049,7 @@ function loadData() {
       if (d.lastSaved) lastSaved = d.lastSaved;
       if (d.futuresOps) futuresOps = d.futuresOps;
       if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
+      if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
     }
   } catch(e) {}
 }
