@@ -476,7 +476,7 @@ function renderOpsTable() {
   `).join('');
 }
 
-// portfolioMatches: { sellId -> buyId }
+// portfolioMatches: { sellId -> [ {buyId, qty}, ... ] }
 let portfolioMatches = {};
 
 function getPortfolio() {
@@ -493,11 +493,13 @@ function getPortfolio() {
     buys.forEach(b => { buyMap[b.id] = {...b, saldadoQty: 0, saldadoBy: []}; });
 
     sells.forEach(sell => {
-      const buyId = portfolioMatches[sell.id];
-      if (buyId && buyMap[buyId]) {
-        buyMap[buyId].saldadoQty += sell.qty;
-        buyMap[buyId].saldadoBy.push(sell.id);
-      }
+      const links = portfolioMatches[sell.id] || [];
+      links.forEach(link => {
+        if (buyMap[link.buyId]) {
+          buyMap[link.buyId].saldadoQty += link.qty;
+          buyMap[link.buyId].saldadoBy.push({sellId: sell.id, qty: link.qty});
+        }
+      });
     });
 
     const buyList = buys.map(b => {
@@ -514,16 +516,30 @@ function getPortfolio() {
   return port;
 }
 
-function assignSellToBuy(sellId, sym) {
-  const selEl = document.getElementById('sel_' + sellId);
-  if (!selEl) return;
+// Add or update a buy link for a sell
+function addBuyLink(sellId, sym) {
+  const selEl = document.getElementById('newlink_buy_' + sellId);
+  const qtyEl = document.getElementById('newlink_qty_' + sellId);
+  if (!selEl || !qtyEl) return;
   const buyId = parseInt(selEl.value);
-  if (!buyId) return;
-  portfolioMatches[sellId] = buyId;
+  const qty   = parseFloat(qtyEl.value);
+  if (!buyId || isNaN(qty) || qty <= 0) return;
+
+  if (!portfolioMatches[sellId]) portfolioMatches[sellId] = [];
+  // If buyId already linked, update qty
+  const existing = portfolioMatches[sellId].find(l => l.buyId === buyId);
+  if (existing) { existing.qty = qty; }
+  else { portfolioMatches[sellId].push({buyId, qty}); }
   renderPortfolio();
 }
 
-function unassignSell(sellId) {
+function removeBuyLink(sellId, buyId) {
+  if (!portfolioMatches[sellId]) return;
+  portfolioMatches[sellId] = portfolioMatches[sellId].filter(l => l.buyId !== buyId);
+  renderPortfolio();
+}
+
+function clearSellLinks(sellId) {
   delete portfolioMatches[sellId];
   renderPortfolio();
 }
@@ -531,7 +547,29 @@ function unassignSell(sellId) {
 function toggleCasarSelector(sellId) {
   const box = document.getElementById('casar_' + sellId);
   if (!box) return;
-  box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+// When user picks a buy in the add-link selector, auto-fill proposed qty
+function onNewLinkBuyChange(sellId, sym) {
+  const port = getPortfolio();
+  const data = port[sym];
+  if (!data) return;
+  const selEl = document.getElementById('newlink_buy_' + sellId);
+  const qtyEl = document.getElementById('newlink_qty_' + sellId);
+  if (!selEl || !qtyEl) return;
+  const buyId = parseInt(selEl.value);
+  const buy   = data.buys.find(b => b.id === buyId);
+  if (!buy) return;
+
+  // Sell total and already linked qty
+  const sell = data.sells.find(s => s.id === sellId);
+  const links = portfolioMatches[sellId] || [];
+  const alreadyLinked = links.filter(l => l.buyId !== buyId).reduce((s, l) => s + l.qty, 0);
+  const remaining = sell ? Math.max(0, sell.qty - alreadyLinked) : 0;
+  // Propose: min(buy remaining, sell remaining)
+  const proposed = Math.min(buy.remaining + (links.find(l=>l.buyId===buyId)?.qty||0), remaining);
+  qtyEl.value = fmt(proposed, 6);
 }
 
 function renderPortfolio() {
@@ -545,6 +583,7 @@ function renderPortfolio() {
     const curPrice = prices[sym]?.price || 0;
     const hasOpen  = data.totalQty > 0.000001;
 
+    // ── Card header ──────────────────────────────────────────────
     if (hasOpen) {
       const avgPrice = data.totalCost / data.totalQty;
       const curValue = data.totalQty * curPrice;
@@ -586,23 +625,34 @@ function renderPortfolio() {
           <tbody>`;
 
       data.buys.forEach(b => {
-        const isLiq    = b.remaining < 0.000001 && b.saldadoQty > 0.000001;
+        const isLiq     = b.remaining < 0.000001 && b.saldadoQty > 0.000001;
         const isParcial = !isLiq && b.saldadoQty > 0.000001;
 
         if (isLiq) {
-          const sellId = b.saldadoBy[0];
-          const sell   = data.sells.find(s => s.id === sellId);
-          const pnlLiq = sell ? (sell.price - b.price) * b.qty : null;
-          const pnlCls = pnlLiq === null ? '' : pnlLiq >= 0 ? 'green' : 'red';
-          const pnlTxt = pnlLiq !== null ? `<span class="${pnlCls}" style="font-weight:600;">${pnlLiq>=0?'+':''}${fmt(pnlLiq,2)} USDT</span>` : '';
+          // Aggregate P&L from all sells that consumed this buy
+          let totalPnl = 0;
+          b.saldadoBy.forEach(link => {
+            const sell = data.sells.find(s => s.id === link.sellId);
+            if (sell) totalPnl += (sell.price - b.price) * link.qty;
+          });
+          const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+          const sellDates = b.saldadoBy.map(link => {
+            const s = data.sells.find(s => s.id === link.sellId);
+            return s ? s.date : '';
+          }).filter(Boolean).join(', ');
           html += `<tr style="background:#fff5f5;">
             <td style="color:#dc2626;text-decoration:line-through;">${b.date}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty,6)}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmtPrice(b.price)}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty*b.price,2)} USDT</td>
-            <td><span class="badge-liquidado">Liquidado</span> ${pnlTxt}${sell?' · venta '+sell.date:''}</td>
+            <td><span class="badge-liquidado">Liquidado</span> <span class="${pnlCls}" style="font-weight:600;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>${sellDates?' <span style="color:#aaa;font-size:11px;">· '+sellDates+'</span>':''}</td>
           </tr>`;
         } else if (isParcial) {
+          let totalPnlR = 0;
+          b.saldadoBy.forEach(link => {
+            const sell = data.sells.find(s => s.id === link.sellId);
+            if (sell) totalPnlR += (sell.price - b.price) * link.qty;
+          });
           const tp = curPrice ? (curPrice - b.price) * b.remaining : null;
           const tc = tp !== null ? (tp>=0?'green':'red') : '';
           html += `<tr>
@@ -624,56 +674,97 @@ function renderPortfolio() {
           </tr>`;
         }
       });
-
       html += `</tbody></table></div>`;
     }
 
     // ── Ventas ───────────────────────────────────────────────────
     if (data.sells.length) {
-      html += `<div class="card-title" style="margin-top:14px;">Ventas</div>
-        <div class="ovx"><table>
-          <thead><tr><th>Fecha</th><th>Cantidad</th><th>Precio venta</th><th>Total</th><th>Estado</th><th></th></tr></thead>
-          <tbody>`;
+      html += `<div class="card-title" style="margin-top:14px;">Ventas</div>`;
 
       data.sells.forEach(sell => {
-        const matchedBuyId = portfolioMatches[sell.id];
-        const matchedBuy   = matchedBuyId ? data.buys.find(b => b.id === matchedBuyId) : null;
-        const isCasada     = !!matchedBuy;
+        const links       = portfolioMatches[sell.id] || [];
+        const linkedQty   = links.reduce((s, l) => s + l.qty, 0);
+        const pending     = sell.qty - linkedQty;
+        const fullyCasada = pending < 0.000001;
+        const hasSome     = links.length > 0;
 
-        let estadoCell = '';
-        if (isCasada) {
-          const pnl    = (sell.price - matchedBuy.price) * sell.qty;
-          const pnlCls = pnl >= 0 ? 'green' : 'red';
-          estadoCell = `<span class="badge-liquidado">Casada</span> <span class="${pnlCls}" style="font-weight:600;">${pnl>=0?'+':''}${fmt(pnl,2)} USDT</span> <span style="color:#aaa;font-size:11px;">· compra ${matchedBuy.date}</span>`;
-        } else {
-          estadoCell = `<span class="badge-parcial">Sin casar</span>`;
+        // P&L total de esta venta
+        let totalPnl = 0;
+        links.forEach(link => {
+          const buy = data.buys.find(b => b.id === link.buyId);
+          if (buy) totalPnl += (sell.price - buy.price) * link.qty;
+        });
+
+        const estadoBadge = fullyCasada
+          ? `<span class="badge-liquidado">Casada</span>`
+          : hasSome
+            ? `<span class="badge-parcial">Parcial · falta ${fmt(pending,6)}</span>`
+            : `<span class="badge-parcial">Sin casar</span>`;
+
+        const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+        const pnlTxt = hasSome ? `<span class="${pnlCls}" style="font-weight:600;margin-left:6px;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>` : '';
+
+        html += `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div style="font-size:13px;">
+              <strong>${sell.date}</strong> · ${fmt(sell.qty,6)} ${sym} · ${fmtPrice(sell.price)} USDT
+              · Total: <strong>${fmt(sell.qty*sell.price,2)} USDT</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              ${estadoBadge}${pnlTxt}
+              <button style="height:26px;padding:0 10px;font-size:11px;" onclick="toggleCasarSelector(${sell.id})">
+                <i class="ti ti-link"></i> ${hasSome?'Editar':'Casar'}
+              </button>
+              ${hasSome?`<button class="danger" style="height:26px;padding:0 10px;font-size:11px;" onclick="clearSellLinks(${sell.id})">Limpiar</button>`:''}
+            </div>
+          </div>`;
+
+        // Linked buys list
+        if (links.length) {
+          html += `<div style="margin-top:8px;font-size:12px;color:#555;">
+            <div style="font-weight:600;margin-bottom:4px;color:#888;">Compras asignadas:</div>`;
+          links.forEach(link => {
+            const buy = data.buys.find(b => b.id === link.buyId);
+            if (!buy) return;
+            const lPnl = (sell.price - buy.price) * link.qty;
+            const lCls = lPnl >= 0 ? 'green' : 'red';
+            html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+              <span style="color:#dc2626;">●</span>
+              <span>${buy.date} · ${fmt(link.qty,6)} ${sym} @ ${fmtPrice(buy.price)}</span>
+              <span class="${lCls}" style="font-weight:600;">${lPnl>=0?'+':''}${fmt(lPnl,2)} USDT</span>
+              <button style="height:20px;padding:0 7px;font-size:10px;color:#dc2626;border-color:#fecaca;" onclick="removeBuyLink(${sell.id},${link.buyId})">✕</button>
+            </div>`;
+          });
+          html += `</div>`;
         }
 
-        const allBuys = data.buys;
-        const opts = allBuys.map(b =>
-          `<option value="${b.id}" ${b.id===matchedBuyId?'selected':''}>${b.date} · ${fmt(b.qty,6)} ${sym} · ${fmtPrice(b.price)} USDT${b.saldadoQty>0&&b.id!==matchedBuyId?' (usada)':''}</option>`
-        ).join('');
+        // Add new link selector — shown inside toggleable box
+        const availBuys = data.buys.filter(b => b.id !== undefined);
+        const opts = availBuys.map(b => {
+          const alreadyLinkedQty = links.find(l => l.buyId === b.id)?.qty || 0;
+          const freeQty = b.remaining + alreadyLinkedQty;
+          return `<option value="${b.id}">${b.date} · ${fmt(b.qty,6)} ${sym} · ${fmtPrice(b.price)} · libre: ${fmt(freeQty,6)}</option>`;
+        }).join('');
 
-        html += `<tr>
-          <td>${sell.date}</td>
-          <td>${fmt(sell.qty,6)}</td>
-          <td>${fmtPrice(sell.price)}</td>
-          <td>${fmt(sell.qty*sell.price,2)} USDT</td>
-          <td>${estadoCell}</td>
-          <td style="white-space:nowrap;">
-            <button style="height:28px;padding:0 10px;font-size:11px;" onclick="toggleCasarSelector(${sell.id})">
-              <i class="ti ti-link"></i> ${isCasada?'Cambiar':'Casar'}
-            </button>
-            <div id="casar_${sell.id}" style="display:none;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;">
-              <select id="sel_${sell.id}" style="flex:1;min-width:200px;font-size:12px;">${opts}</select>
-              <button class="primary" style="height:28px;padding:0 10px;font-size:11px;" onclick="assignSellToBuy(${sell.id},'${sym}')">Confirmar</button>
-              ${isCasada?`<button class="danger" style="height:28px;padding:0 10px;font-size:11px;" onclick="unassignSell(${sell.id})">Deshacer</button>`:''}
-            </div>
-          </td>
-        </tr>`;
+        // Propose qty for first available buy
+        const firstBuy = availBuys[0];
+        const alreadyLinked = links.filter(l => firstBuy && l.buyId !== firstBuy.id).reduce((s,l)=>s+l.qty,0);
+        const proposed = firstBuy ? fmt(Math.min(firstBuy.remaining + (links.find(l=>l.buyId===firstBuy.id)?.qty||0), Math.max(0, sell.qty - alreadyLinked)), 6) : '0';
+
+        html += `<div id="casar_${sell.id}" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">Añadir compra asignada</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <select id="newlink_buy_${sell.id}" style="flex:2;min-width:220px;font-size:12px;" onchange="onNewLinkBuyChange(${sell.id},'${sym}')">${opts}</select>
+            <input id="newlink_qty_${sell.id}" type="number" step="any" value="${proposed}" style="width:110px;font-size:12px;" placeholder="Cantidad">
+            <button class="primary" style="height:30px;padding:0 12px;font-size:12px;" onclick="addBuyLink(${sell.id},'${sym}')">Añadir</button>
+          </div>
+          <div style="font-size:11px;color:#aaa;margin-top:6px;">
+            Cubierto: <strong>${fmt(linkedQty,6)}</strong> / ${fmt(sell.qty,6)} · Pendiente: <strong style="color:${pending>0.000001?'#f59e0b':'#22c55e'}">${fmt(Math.max(0,pending),6)}</strong>
+          </div>
+        </div>`;
+
+        html += `</div>`;
       });
-
-      html += `</tbody></table></div>`;
     }
 
     html += `</div>`;
