@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.4</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.5</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -660,7 +660,7 @@ function toggleCasarSelectorTracked(sellId) {
   }
 }
 
-// When user picks a buy in the add-link selector, auto-fill proposed qty
+// When user picks a buy in the add-link selector, auto-fill with buy's full qty
 function onNewLinkBuyChange(sellId, sym) {
   const port = getPortfolio();
   const data = port[sym];
@@ -672,17 +672,8 @@ function onNewLinkBuyChange(sellId, sym) {
   casarSelectedBuy[sellId] = buyId;
   const buy = data.buys.find(b => b.id === buyId);
   if (!buy) return;
-
-  const sell = data.sells.find(s => s.id === sellId);
-  const links = portfolioMatches[sellId] || [];
-  // How much of the sell is still unlinked (excluding current buy's link)
-  const alreadyLinked = links.filter(l => l.buyId !== buyId).reduce((s, l) => s + l.qty, 0);
-  const sellRemaining = sell ? Math.max(0, sell.qty - alreadyLinked) : 0;
-  // Available from this buy = full qty minus what's already saldado by OTHER sells
-  const usedByOthers = (buy.qty - buy.remaining) - (links.find(l => l.buyId === buyId)?.qty || 0);
-  const buyAvailable = Math.max(0, buy.qty - Math.max(0, usedByOthers));
-  const proposed = Math.min(buyAvailable, sellRemaining);
-  qtyEl.value = fmt(proposed, 6);
+  // Propose full buy qty — user can edit if needed
+  qtyEl.value = fmt(buy.qty, 6);
 }
 
 function renderPortfolio() {
@@ -697,12 +688,24 @@ function renderPortfolio() {
     const hasOpen  = data.totalQty > 0.000001;
 
     // ── Card header ──────────────────────────────────────────────
+    // Calculate realized P&L from all casaciones for this symbol
+    let realizedPnl = 0;
+    data.sells.forEach(sell => {
+      const links = portfolioMatches[sell.id] || [];
+      links.forEach(link => {
+        const buy = data.buys.find(b => b.id === link.buyId);
+        if (buy) realizedPnl += (sell.price - buy.price) * link.qty;
+      });
+    });
+    const hasRealized = data.sells.some(s => (portfolioMatches[s.id] || []).length > 0);
+
     if (hasOpen) {
       const avgPrice = data.totalCost / data.totalQty;
       const curValue = data.totalQty * curPrice;
       const pnl      = curValue - data.totalCost;
       const pnlPct   = data.totalCost > 0 ? (pnl / data.totalCost) * 100 : 0;
       const cls      = pnl >= 0 ? 'green' : 'red';
+      const rCls     = realizedPnl >= 0 ? 'green' : 'red';
       html += `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
           <div>
@@ -719,14 +722,18 @@ function renderPortfolio() {
           <div class="metric"><div class="metric-label">Precio medio ponderado</div><div class="metric-value" style="font-size:14px;">${fmtPrice(avgPrice)}</div></div>
           <div class="metric"><div class="metric-label">Coste abierto</div><div class="metric-value" style="font-size:14px;">${fmt(data.totalCost,2)}</div></div>
           <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${cls}" style="font-size:14px;">${pnl>=0?'+':''}${fmt(pnl,2)}</div></div>
+          ${hasRealized?`<div class="metric"><div class="metric-label">P&L realizado</div><div class="metric-value ${rCls}" style="font-size:14px;">${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)}</div></div>`:''}
+          ${hasRealized?`<div class="metric"><div class="metric-label">P&L total</div><div class="metric-value ${(pnl+realizedPnl)>=0?'green':'red'}" style="font-size:14px;font-weight:600;">${(pnl+realizedPnl)>=0?'+':''}${fmt(pnl+realizedPnl,2)}</div></div>`:''}
         </div>`;
     } else {
+      const rCls = realizedPnl >= 0 ? 'green' : 'red';
       html += `<div class="card" style="border-color:#fecaca;background:#fffafa;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
           <div>
             <span style="font-size:17px;font-weight:500;color:#dc2626;">${sym}</span>
             <span class="badge-liquidado" style="font-size:12px;">POSICIÓN CERRADA</span>
           </div>
+          ${hasRealized?`<div style="text-align:right;"><div class="small ${rCls}" style="font-size:14px;font-weight:600;">P&L realizado: ${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)} USDT</div></div>`:''}
         </div>`;
     }
 
