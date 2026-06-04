@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.5</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.6</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -481,6 +481,8 @@ function renderOpsTable() {
 
 // portfolioMatches: { sellId -> [ {buyId, qty}, ... ] }
 let portfolioMatches = {};
+// portfolioExcluded: { sym -> [buyId, ...] }
+let portfolioExcluded = {};
 
 function getPortfolio() {
   const raw = {};
@@ -512,11 +514,24 @@ function getPortfolio() {
     });
 
     let totalQty = 0, totalCost = 0;
-    buyList.forEach(b => { totalQty += b.remaining; totalCost += b.remaining * b.price; });
+    buyList.forEach(b => {
+      const excluded = (portfolioExcluded[sym] || []).includes(b.id);
+      b.excluded = excluded;
+      if (!excluded) { totalQty += b.remaining; totalCost += b.remaining * b.price; }
+    });
 
     port[sym] = { buys: buyList, sells, totalQty, totalCost };
   });
   return port;
+}
+
+function toggleExcludeBuy(sym, buyId) {
+  if (!portfolioExcluded[sym]) portfolioExcluded[sym] = [];
+  const idx = portfolioExcluded[sym].indexOf(buyId);
+  if (idx >= 0) portfolioExcluded[sym].splice(idx, 1);
+  else portfolioExcluded[sym].push(buyId);
+  scheduleSave();
+  renderPortfolio();
 }
 
 // Add or update a buy link for a sell — updates DOM directly, no full re-render
@@ -706,6 +721,7 @@ function renderPortfolio() {
       const pnlPct   = data.totalCost > 0 ? (pnl / data.totalCost) * 100 : 0;
       const cls      = pnl >= 0 ? 'green' : 'red';
       const rCls     = realizedPnl >= 0 ? 'green' : 'red';
+      const uncasadaQty = data.buys.filter(b => !b.excluded).reduce((s,b) => s + b.remaining, 0);
       html += `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
           <div>
@@ -720,6 +736,7 @@ function renderPortfolio() {
         <div class="metric-grid">
           <div class="metric"><div class="metric-label">Precio actual</div><div class="metric-value" style="font-size:14px;">${curPrice?fmtPrice(curPrice):'—'}</div></div>
           <div class="metric"><div class="metric-label">Precio medio ponderado</div><div class="metric-value" style="font-size:14px;">${fmtPrice(avgPrice)}</div></div>
+          <div class="metric"><div class="metric-label">Total sin casar</div><div class="metric-value" style="font-size:14px;">${fmt(uncasadaQty,6)} ${sym}</div></div>
           <div class="metric"><div class="metric-label">Coste abierto</div><div class="metric-value" style="font-size:14px;">${fmt(data.totalCost,2)}</div></div>
           <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${cls}" style="font-size:14px;">${pnl>=0?'+':''}${fmt(pnl,2)}</div></div>
           ${hasRealized?`<div class="metric"><div class="metric-label">P&L realizado</div><div class="metric-value ${rCls}" style="font-size:14px;">${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)}</div></div>`:''}
@@ -741,15 +758,17 @@ function renderPortfolio() {
     if (data.buys.length) {
       html += `<div class="card-title" style="margin-top:4px;">Tramos de compra</div>
         <div class="ovx"><table>
-          <thead><tr><th>Fecha</th><th>Cantidad</th><th>Precio compra</th><th>Coste</th><th>Estado / P&L</th></tr></thead>
+          <thead><tr><th style="width:30px;">✓</th><th>Fecha</th><th>Cantidad</th><th>Precio compra</th><th>Coste</th><th>Estado / P&L</th></tr></thead>
           <tbody>`;
 
       data.buys.forEach(b => {
         const isLiq     = b.remaining < 0.000001 && b.saldadoQty > 0.000001;
         const isParcial = !isLiq && b.saldadoQty > 0.000001;
+        const isExcl    = b.excluded;
+        const rowStyle  = isExcl ? 'opacity:0.45;' : '';
+        const chk       = `<input type="checkbox" ${!isExcl?'checked':''} onchange="toggleExcludeBuy('${sym}',${b.id})" style="cursor:pointer;">`;
 
         if (isLiq) {
-          // Aggregate P&L from all sells that consumed this buy
           let totalPnl = 0;
           b.saldadoBy.forEach(link => {
             const sell = data.sells.find(s => s.id === link.sellId);
@@ -760,7 +779,8 @@ function renderPortfolio() {
             const s = data.sells.find(s => s.id === link.sellId);
             return s ? s.date : '';
           }).filter(Boolean).join(', ');
-          html += `<tr style="background:#fff5f5;">
+          html += `<tr style="background:#fff5f5;${rowStyle}">
+            <td>${chk}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${b.date}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty,6)}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmtPrice(b.price)}</td>
@@ -768,14 +788,10 @@ function renderPortfolio() {
             <td><span class="badge-liquidado">Liquidado</span> <span class="${pnlCls}" style="font-weight:600;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>${sellDates?' <span style="color:#aaa;font-size:11px;">· '+sellDates+'</span>':''}</td>
           </tr>`;
         } else if (isParcial) {
-          let totalPnlR = 0;
-          b.saldadoBy.forEach(link => {
-            const sell = data.sells.find(s => s.id === link.sellId);
-            if (sell) totalPnlR += (sell.price - b.price) * link.qty;
-          });
           const tp = curPrice ? (curPrice - b.price) * b.remaining : null;
           const tc = tp !== null ? (tp>=0?'green':'red') : '';
-          html += `<tr>
+          html += `<tr style="${rowStyle}">
+            <td>${chk}</td>
             <td>${b.date}</td>
             <td>${fmt(b.remaining,6)} <span style="color:#aaa;font-size:11px;">(de ${fmt(b.qty,6)})</span></td>
             <td style="cursor:pointer;" onclick="editOpPrice(${b.id})" title="Click para editar">${fmtPrice(b.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
@@ -785,7 +801,8 @@ function renderPortfolio() {
         } else {
           const tp = curPrice ? (curPrice - b.price) * b.qty : null;
           const tc = tp !== null ? (tp>=0?'green':'red') : '';
-          html += `<tr>
+          html += `<tr style="${rowStyle}">
+            <td>${chk}</td>
             <td>${b.date}</td>
             <td>${fmt(b.qty,6)}</td>
             <td style="cursor:pointer;" onclick="editOpPrice(${b.id})" title="Click para editar">${fmtPrice(b.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
@@ -866,10 +883,9 @@ function renderPortfolio() {
           return `<option value="${b.id}">${b.date} · ${fmt(b.qty,6)} ${sym} · ${fmtPrice(b.price)} · libre: ${fmt(freeQty,6)}</option>`;
         }).join('');
 
-        // Propose qty for first available buy
+        // Propose qty = full qty of first available buy
         const firstBuy = availBuys[0];
-        const alreadyLinked = links.filter(l => firstBuy && l.buyId !== firstBuy.id).reduce((s,l)=>s+l.qty,0);
-        const proposed = firstBuy ? fmt(Math.min(firstBuy.remaining + (links.find(l=>l.buyId===firstBuy.id)?.qty||0), Math.max(0, sell.qty - alreadyLinked)), 6) : '0';
+        const proposed = firstBuy ? fmt(firstBuy.qty, 6) : '0';
 
         html += `<div id="casar_${sell.id}" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
           <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">Añadir compra asignada</div>
@@ -1099,6 +1115,7 @@ async function loadFromDrive() {
         if (d.futuresOps) futuresOps = d.futuresOps;
         if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
         if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
+        if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
         renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
         showToast('✓ Datos cargados desde Drive');
         updateSyncBar();
@@ -1120,7 +1137,7 @@ async function saveToDrive() {
     await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches })
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded })
     });
     saveToLocal();
     btn.className = 'drive-btn connected';
@@ -1136,7 +1153,7 @@ async function saveToDrive() {
 }
 
 function saveToLocal() {
-  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches })); } catch(e) {}
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded })); } catch(e) {}
 }
 
 function scheduleSave() {
@@ -1156,6 +1173,7 @@ function loadData() {
       if (d.futuresOps) futuresOps = d.futuresOps;
       if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
       if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
+      if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
     }
   } catch(e) {}
 }
