@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crypto Portfolio Tracker</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
@@ -112,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.1</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.4</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -516,33 +519,116 @@ function getPortfolio() {
   return port;
 }
 
-// Add or update a buy link for a sell
+// Add or update a buy link for a sell — updates DOM directly, no full re-render
 function addBuyLink(sellId, sym) {
   const selEl = document.getElementById('newlink_buy_' + sellId);
   const qtyEl = document.getElementById('newlink_qty_' + sellId);
   if (!selEl || !qtyEl) return;
   const buyId = parseInt(selEl.value);
   const qty   = parseFloat(qtyEl.value);
-  if (!buyId || isNaN(qty) || qty <= 0) return;
+  if (!buyId || isNaN(qty) || qty <= 0) { alert('Selecciona una compra e indica una cantidad válida.'); return; }
 
   if (!portfolioMatches[sellId]) portfolioMatches[sellId] = [];
   const existing = portfolioMatches[sellId].find(l => l.buyId === buyId);
   if (existing) { existing.qty = qty; }
   else { portfolioMatches[sellId].push({buyId, qty}); }
-  casarOpen[sellId] = true; // keep panel open after adding
+
+  casarSelectedBuy[sellId] = buyId;
   scheduleSave();
-  renderPortfolio();
+
+  // Refresh only the sell card DOM, not the whole portfolio
+  refreshSellCard(sellId, sym);
 }
 
-function removeBuyLink(sellId, buyId) {
+function refreshSellCard(sellId, sym) {
+  const port = getPortfolio();
+  const data = port[sym];
+  if (!data) return;
+  const sell = data.sells.find(s => s.id === sellId);
+  if (!sell) return;
+
+  const links     = portfolioMatches[sell.id] || [];
+  const linkedQty = links.reduce((s, l) => s + l.qty, 0);
+  const pending   = sell.qty - linkedQty;
+  const fullyCasada = pending < 0.000001;
+  const hasSome     = links.length > 0;
+
+  // Update badge
+  const badgeEl = document.getElementById('sell_badge_' + sellId);
+  if (badgeEl) {
+    let totalPnl = 0;
+    links.forEach(link => {
+      const buy = data.buys.find(b => b.id === link.buyId);
+      if (buy) totalPnl += (sell.price - buy.price) * link.qty;
+    });
+    const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+    const pnlTxt = hasSome ? `<span class="${pnlCls}" style="font-weight:600;margin-left:6px;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>` : '';
+    const badge  = fullyCasada
+      ? `<span class="badge-liquidado">Casada</span>`
+      : hasSome
+        ? `<span class="badge-parcial">Parcial · falta ${fmt(pending,6)}</span>`
+        : `<span class="badge-parcial">Sin casar</span>`;
+    badgeEl.innerHTML = badge + pnlTxt;
+  }
+
+  // Update linked buys list
+  const listEl = document.getElementById('sell_links_' + sellId);
+  if (listEl) {
+    let listHtml = '';
+    if (links.length) {
+      listHtml += `<div style="font-weight:600;margin-bottom:4px;color:#888;font-size:12px;">Compras asignadas:</div>`;
+      links.forEach(link => {
+        const buy = data.buys.find(b => b.id === link.buyId);
+        if (!buy) return;
+        const lPnl = (sell.price - buy.price) * link.qty;
+        const lCls = lPnl >= 0 ? 'green' : 'red';
+        listHtml += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;font-size:12px;">
+          <span style="color:#dc2626;">●</span>
+          <span>${buy.date} · ${fmt(link.qty,6)} ${sym} @ ${fmtPrice(buy.price)}</span>
+          <span class="${lCls}" style="font-weight:600;">${lPnl>=0?'+':''}${fmt(lPnl,2)} USDT</span>
+          <button style="height:20px;padding:0 7px;font-size:10px;color:#dc2626;border-color:#fecaca;" onclick="removeBuyLink(${sell.id},${link.buyId},'${sym}')">✕</button>
+        </div>`;
+      });
+    }
+    listEl.innerHTML = listHtml;
+  }
+
+  // Update counter
+  const counterEl = document.getElementById('sell_counter_' + sellId);
+  if (counterEl) {
+    counterEl.innerHTML = `Cubierto: <strong>${fmt(linkedQty,6)}</strong> / ${fmt(sell.qty,6)} · Pendiente: <strong style="color:${pending>0.000001?'#f59e0b':'#22c55e'}">${fmt(Math.max(0,pending),6)}</strong>`;
+  }
+
+  // Auto-fill qty for currently selected buy after adding
+  const selEl = document.getElementById('newlink_buy_' + sellId);
+  if (selEl) {
+    // Move to next unlinked buy if current is now fully linked
+    const currentBuyId = parseInt(selEl.value);
+    const currentBuy   = data.buys.find(b => b.id === currentBuyId);
+    const currentLinkedQty = links.find(l => l.buyId === currentBuyId)?.qty || 0;
+    if (currentBuy && currentBuy.qty - currentLinkedQty < 0.000001) {
+      // find next unlinked buy
+      const nextBuy = data.buys.find(b => {
+        const lq = links.find(l => l.buyId === b.id)?.qty || 0;
+        return b.qty - lq > 0.000001;
+      });
+      if (nextBuy) { selEl.value = nextBuy.id; casarSelectedBuy[sellId] = nextBuy.id; }
+    }
+    onNewLinkBuyChange(sellId, sym);
+  }
+}
+
+function removeBuyLink(sellId, buyId, sym) {
   if (!portfolioMatches[sellId]) return;
   portfolioMatches[sellId] = portfolioMatches[sellId].filter(l => l.buyId !== buyId);
   scheduleSave();
+  // Full re-render needed to update buy tramos table
   renderPortfolio();
 }
 
 function clearSellLinks(sellId) {
   delete portfolioMatches[sellId];
+  delete casarSelectedBuy[sellId];
   scheduleSave();
   renderPortfolio();
 }
@@ -560,6 +646,8 @@ function toggleCasarSelector(sellId) {
 
 // Track which casar panels are open so renderPortfolio can restore them
 let casarOpen = {};
+// Track which buy was selected in each casar panel
+let casarSelectedBuy = {};
 
 function toggleCasarSelectorTracked(sellId) {
   casarOpen[sellId] = !casarOpen[sellId];
@@ -581,16 +669,19 @@ function onNewLinkBuyChange(sellId, sym) {
   const qtyEl = document.getElementById('newlink_qty_' + sellId);
   if (!selEl || !qtyEl) return;
   const buyId = parseInt(selEl.value);
-  const buy   = data.buys.find(b => b.id === buyId);
+  casarSelectedBuy[sellId] = buyId;
+  const buy = data.buys.find(b => b.id === buyId);
   if (!buy) return;
 
-  // Sell total and already linked qty
   const sell = data.sells.find(s => s.id === sellId);
   const links = portfolioMatches[sellId] || [];
+  // How much of the sell is still unlinked (excluding current buy's link)
   const alreadyLinked = links.filter(l => l.buyId !== buyId).reduce((s, l) => s + l.qty, 0);
-  const remaining = sell ? Math.max(0, sell.qty - alreadyLinked) : 0;
-  // Propose: min(buy remaining, sell remaining)
-  const proposed = Math.min(buy.remaining + (links.find(l=>l.buyId===buyId)?.qty||0), remaining);
+  const sellRemaining = sell ? Math.max(0, sell.qty - alreadyLinked) : 0;
+  // Available from this buy = full qty minus what's already saldado by OTHER sells
+  const usedByOthers = (buy.qty - buy.remaining) - (links.find(l => l.buyId === buyId)?.qty || 0);
+  const buyAvailable = Math.max(0, buy.qty - Math.max(0, usedByOthers));
+  const proposed = Math.min(buyAvailable, sellRemaining);
   qtyEl.value = fmt(proposed, 6);
 }
 
@@ -733,7 +824,7 @@ function renderPortfolio() {
               · Total: <strong>${fmt(sell.qty*sell.price,2)} USDT</strong>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              ${estadoBadge}${pnlTxt}
+              <span id="sell_badge_${sell.id}">${estadoBadge}${pnlTxt}</span>
               <button style="height:26px;padding:0 10px;font-size:11px;" onclick="toggleCasarSelectorTracked(${sell.id})">
                 <i class="ti ti-link"></i> ${hasSome?'Editar':'Casar'}
               </button>
@@ -742,23 +833,23 @@ function renderPortfolio() {
           </div>`;
 
         // Linked buys list
+        html += `<div id="sell_links_${sell.id}" style="margin-top:${links.length?'8px':'0'};">`;
         if (links.length) {
-          html += `<div style="margin-top:8px;font-size:12px;color:#555;">
-            <div style="font-weight:600;margin-bottom:4px;color:#888;">Compras asignadas:</div>`;
+          html += `<div style="font-weight:600;margin-bottom:4px;color:#888;font-size:12px;">Compras asignadas:</div>`;
           links.forEach(link => {
             const buy = data.buys.find(b => b.id === link.buyId);
             if (!buy) return;
             const lPnl = (sell.price - buy.price) * link.qty;
             const lCls = lPnl >= 0 ? 'green' : 'red';
-            html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+            html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;font-size:12px;">
               <span style="color:#dc2626;">●</span>
               <span>${buy.date} · ${fmt(link.qty,6)} ${sym} @ ${fmtPrice(buy.price)}</span>
               <span class="${lCls}" style="font-weight:600;">${lPnl>=0?'+':''}${fmt(lPnl,2)} USDT</span>
-              <button style="height:20px;padding:0 7px;font-size:10px;color:#dc2626;border-color:#fecaca;" onclick="removeBuyLink(${sell.id},${link.buyId})">✕</button>
+              <button style="height:20px;padding:0 7px;font-size:10px;color:#dc2626;border-color:#fecaca;" onclick="removeBuyLink(${sell.id},${link.buyId},'${sym}')">✕</button>
             </div>`;
           });
-          html += `</div>`;
         }
+        html += `</div>`;
 
         // Add new link selector — shown inside toggleable box
         const availBuys = data.buys.filter(b => b.id !== undefined);
@@ -780,7 +871,7 @@ function renderPortfolio() {
             <input id="newlink_qty_${sell.id}" type="number" step="any" value="${proposed}" style="width:110px;font-size:12px;" placeholder="Cantidad">
             <button class="primary" style="height:30px;padding:0 12px;font-size:12px;" onclick="addBuyLink(${sell.id},'${sym}')">Añadir</button>
           </div>
-          <div style="font-size:11px;color:#aaa;margin-top:6px;">
+          <div id="sell_counter_${sell.id}" style="font-size:11px;color:#aaa;margin-top:6px;">
             Cubierto: <strong>${fmt(linkedQty,6)}</strong> / ${fmt(sell.qty,6)} · Pendiente: <strong style="color:${pending>0.000001?'#f59e0b':'#22c55e'}">${fmt(Math.max(0,pending),6)}</strong>
           </div>
         </div>`;
@@ -797,13 +888,21 @@ function renderPortfolio() {
     : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>';
 
   // Restore open casar panels and trigger auto-fill
-  Object.keys(casarOpen).forEach(sellId => {
-    if (casarOpen[sellId]) {
-      const box = document.getElementById('casar_' + sellId);
+  Object.keys(casarOpen).forEach(sid => {
+    if (casarOpen[sid]) {
+      const box = document.getElementById('casar_' + sid);
       if (box) {
         box.style.display = 'block';
-        const selEl = document.getElementById('newlink_buy_' + sellId);
-        if (selEl) onNewLinkBuyChange(parseInt(sellId), selEl.dataset.sym);
+        const selEl = document.getElementById('newlink_buy_' + sid);
+        if (selEl) {
+          // Restore previously selected buy if still available
+          const savedBuyId = casarSelectedBuy[sid];
+          if (savedBuyId) {
+            const opt = selEl.querySelector(`option[value="${savedBuyId}"]`);
+            if (opt) selEl.value = savedBuyId;
+          }
+          onNewLinkBuyChange(parseInt(sid), selEl.dataset.sym);
+        }
       }
     }
   });
