@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.6</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.7</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -534,6 +534,17 @@ function toggleExcludeBuy(sym, buyId) {
   renderPortfolio();
 }
 
+// Track which symbols have detail expanded
+let portfolioExpanded = {};
+
+function togglePortfolioDetail(sym) {
+  portfolioExpanded[sym] = !portfolioExpanded[sym];
+  const el = document.getElementById('portdetail_' + sym);
+  const chk = document.getElementById('portchk_' + sym);
+  if (el) el.style.display = portfolioExpanded[sym] ? 'block' : 'none';
+  if (chk) chk.checked = !!portfolioExpanded[sym];
+}
+
 // Add or update a buy link for a sell — updates DOM directly, no full re-render
 function addBuyLink(sellId, sym) {
   const selEl = document.getElementById('newlink_buy_' + sellId);
@@ -722,11 +733,15 @@ function renderPortfolio() {
       const cls      = pnl >= 0 ? 'green' : 'red';
       const rCls     = realizedPnl >= 0 ? 'green' : 'red';
       const uncasadaQty = data.buys.filter(b => !b.excluded).reduce((s,b) => s + b.remaining, 0);
+      const isExpanded  = !!portfolioExpanded[sym];
       html += `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-          <div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;margin:0;" title="Ver tramos y ventas">
+              <input id="portchk_${sym}" type="checkbox" ${isExpanded?'checked':''} onchange="togglePortfolioDetail('${sym}')" style="width:15px;height:15px;cursor:pointer;">
+            </label>
             <span style="font-size:17px;font-weight:500;">${sym}</span>
-            <span class="sym-badge" style="margin-left:8px;">${fmt(data.totalQty,6)} ${sym}</span>
+            <span class="sym-badge">${fmt(data.totalQty,6)} ${sym}</span>
           </div>
           <div style="text-align:right;">
             <div style="font-size:17px;font-weight:500;">${fmt(curValue,2)} USDT</div>
@@ -741,17 +756,23 @@ function renderPortfolio() {
           <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${cls}" style="font-size:14px;">${pnl>=0?'+':''}${fmt(pnl,2)}</div></div>
           ${hasRealized?`<div class="metric"><div class="metric-label">P&L realizado</div><div class="metric-value ${rCls}" style="font-size:14px;">${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)}</div></div>`:''}
           ${hasRealized?`<div class="metric"><div class="metric-label">P&L total</div><div class="metric-value ${(pnl+realizedPnl)>=0?'green':'red'}" style="font-size:14px;font-weight:600;">${(pnl+realizedPnl)>=0?'+':''}${fmt(pnl+realizedPnl,2)}</div></div>`:''}
-        </div>`;
+        </div>
+        <div id="portdetail_${sym}" style="display:${isExpanded?'block':'none'};">`;
     } else {
       const rCls = realizedPnl >= 0 ? 'green' : 'red';
+      const isExpanded = !!portfolioExpanded[sym];
       html += `<div class="card" style="border-color:#fecaca;background:#fffafa;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-          <div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;margin:0;" title="Ver tramos y ventas">
+              <input id="portchk_${sym}" type="checkbox" ${isExpanded?'checked':''} onchange="togglePortfolioDetail('${sym}')" style="width:15px;height:15px;cursor:pointer;">
+            </label>
             <span style="font-size:17px;font-weight:500;color:#dc2626;">${sym}</span>
             <span class="badge-liquidado" style="font-size:12px;">POSICIÓN CERRADA</span>
           </div>
           ${hasRealized?`<div style="text-align:right;"><div class="small ${rCls}" style="font-size:14px;font-weight:600;">P&L realizado: ${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)} USDT</div></div>`:''}
-        </div>`;
+        </div>
+        <div id="portdetail_${sym}" style="display:${isExpanded?'block':'none'};">`;
     }
 
     // ── Tramos de compra ─────────────────────────────────────────
@@ -903,7 +924,7 @@ function renderPortfolio() {
       });
     }
 
-    html += `</div>`;
+    html += `</div></div>`; // close portdetail + card
   });
 
   document.getElementById('portfolioContent').innerHTML = hasAny
