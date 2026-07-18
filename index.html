@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.8</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.9</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -196,13 +196,9 @@ tr:last-child td { border-bottom: none; }
     <div class="card">
       <div class="card-title">Simulador de venta</div>
       <div class="row">
-        <select id="simSym"></select>
+        <select id="simSym" onchange="updateSimQty()"></select>
         <input type="number" id="simPrice" placeholder="Precio venta USDT" step="any" style="width:170px;" />
-        <select id="simMode" onchange="toggleSimQty()">
-          <option value="all">Todo el activo</option>
-          <option value="partial">Cantidad específica</option>
-        </select>
-        <input type="number" id="simQty" placeholder="Cantidad" step="any" class="hidden" />
+        <input type="number" id="simQty" placeholder="Cantidad" step="any" style="width:140px;" />
         <button class="primary" onclick="runSim()"><i class="ti ti-calculator"></i> Simular</button>
       </div>
       <div id="simResult"></div>
@@ -968,33 +964,37 @@ function renderPortfolio() {
 }
 
 
-function toggleSimQty() {
-  document.getElementById('simQty').classList.toggle('hidden', document.getElementById('simMode').value !== 'partial');
+function updateSimQty() {
+  const sym = document.getElementById('simSym').value;
+  const port = getPortfolio();
+  const data = port[sym];
+  if (data && data.totalQty > 0.000001) {
+    document.getElementById('simQty').value = data.totalQty.toFixed(6);
+  } else {
+    document.getElementById('simQty').value = '';
+  }
 }
 
 function populateSimSelect() {
   const port = getPortfolio();
   const active = Object.entries(port).filter(([s,d]) => d.totalQty > 0.000001);
   const sel = document.getElementById('simSym');
+  const cur = sel.value;
   sel.innerHTML = active.length
-    ? active.map(([s]) => `<option value="${s}">${s}</option>`).join('')
+    ? active.map(([s]) => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('')
     : '<option>Sin posiciones</option>';
+  updateSimQty();
 }
 
 function runSim() {
   const sym = document.getElementById('simSym').value;
   const sellPrice = parseFloat(document.getElementById('simPrice').value);
-  const mode = document.getElementById('simMode').value;
   const port = getPortfolio();
   const data = port[sym];
   if (!data || data.totalQty < 0.000001) { document.getElementById('simResult').innerHTML = '<div class="muted small" style="margin-top:10px;">No tienes posición en este activo.</div>'; return; }
   if (isNaN(sellPrice) || sellPrice <= 0) { document.getElementById('simResult').innerHTML = '<div class="muted small" style="margin-top:10px;">Introduce un precio de venta válido.</div>'; return; }
-  let qtyToSell = data.totalQty;
-  if (mode === 'partial') {
-    qtyToSell = parseFloat(document.getElementById('simQty').value);
-    if (isNaN(qtyToSell) || qtyToSell <= 0) qtyToSell = data.totalQty;
-    if (qtyToSell > data.totalQty) qtyToSell = data.totalQty;
-  }
+  let qtyToSell = parseFloat(document.getElementById('simQty').value);
+  if (isNaN(qtyToSell) || qtyToSell <= 0) qtyToSell = data.totalQty;
   const ratio = qtyToSell / data.totalQty;
   const avgCost = data.totalCost / data.totalQty;
   const costBasis = qtyToSell * avgCost;
