@@ -991,9 +991,9 @@ function renderPortfolio() {
     html += `</div></div>`; // close portdetail + card
   });
 
-  document.getElementById('portfolioContent').innerHTML = hasAny
+  document.getElementById('portfolioContent').innerHTML = renderWallet() + (hasAny
     ? html
-    : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>';
+    : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>');
 
   // Restore open casar panels and trigger auto-fill
   Object.keys(casarOpen).forEach(sid => {
