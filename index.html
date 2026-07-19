@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v1.9</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.0</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -158,6 +158,10 @@ tr:last-child td { border-bottom: none; }
       </div>
       <div class="row">
         <input type="number" id="opPrice" placeholder="Precio USDT" step="any" />
+        <select id="opCuenta" style="width:110px;">
+          <option value="USDT">Cuenta USDT</option>
+          <option value="EUR">Cuenta EUR</option>
+        </select>
         <input type="text" id="opNotes" placeholder="Notas (opcional)" style="flex:2;" />
         <button class="primary" onclick="addOperation()"><i class="ti ti-plus"></i> Añadir operación</button>
       </div>
@@ -243,6 +247,8 @@ let prices = {};
 let operations = [];
 let saleHistory = [];
 let futuresOps = [];
+let saldoUSDT = 0;
+let saldoEUR = 0;
 let futuresSaldo = 0;
 let lastSaved = null;
 let accessToken = null;
@@ -375,19 +381,28 @@ async function loadPriceForDate() {
 }
 
 function addOperation() {
-  const type  = document.getElementById('opType').value;
-  const sym   = document.getElementById('opSym').value;
-  const qty   = parseFloat(document.getElementById('opQty').value);
-  const price = parseFloat(document.getElementById('opPrice').value);
-  const date  = document.getElementById('opDate').value;
-  const notes = document.getElementById('opNotes').value.trim();
+  const type   = document.getElementById('opType').value;
+  const sym    = document.getElementById('opSym').value;
+  const qty    = parseFloat(document.getElementById('opQty').value);
+  const price  = parseFloat(document.getElementById('opPrice').value);
+  const date   = document.getElementById('opDate').value;
+  const notes  = document.getElementById('opNotes').value.trim();
+  const cuenta = document.getElementById('opCuenta').value;
   if (!sym || isNaN(qty) || qty <= 0 || isNaN(price) || price <= 0 || !date) {
     document.getElementById('opMsg').textContent = 'Completa todos los campos correctamente.';
     return;
   }
-  operations.push({ id: Date.now(), type, sym, qty, price, date, notes });
+  const total = qty * price;
+  if (type === 'buy') {
+    if (cuenta === 'USDT') saldoUSDT -= total;
+    else saldoEUR -= total;
+  } else {
+    if (cuenta === 'USDT') saldoUSDT += total;
+    else saldoEUR += total;
+  }
+  operations.push({ id: Date.now(), type, sym, qty, price, date, notes, cuenta });
   operations.sort((a,b) => a.date.localeCompare(b.date));
-  document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> ${type==='buy'?'Compra':'Venta'} de ${fmt(qty,6)} ${sym} a ${fmtPrice(price)} USDT registrada.`;
+  document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> ${type==='buy'?'Compra':'Venta'} de ${fmt(qty,6)} ${sym} a ${fmtPrice(price)} USDT — ${cuenta === 'USDT' ? (type==='buy'?'Debitado de':'Abonado en') : (type==='buy'?'Debitado de':'Abonado en')} cuenta ${cuenta}.`;
   document.getElementById('opQty').value = '';
   document.getElementById('opPrice').value = '';
   document.getElementById('opNotes').value = '';
@@ -708,6 +723,44 @@ function onNewLinkBuyChange(sellId, sym) {
   if (!buy) return;
   // Propose full buy qty — user can edit if needed
   qtyEl.value = fmt(buy.qty, 6);
+}
+
+function renderWallet() {
+  return `<div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Saldos de cuenta</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-label">Cuenta USDT</div>
+        <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
+          <span>${fmt(saldoUSDT,2)} USDT</span>
+          <button onclick="editSaldo('USDT')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Cuenta EUR</div>
+        <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
+          <span>${fmt(saldoEUR,2)} EUR</span>
+          <button onclick="editSaldo('EUR')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Total en cuenta (USDT)</div>
+        <div class="metric-value">${fmt(saldoUSDT + saldoEUR * (prices['EUR'] || 1), 2)} USDT</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function editSaldo(moneda) {
+  const cur = moneda === 'USDT' ? saldoUSDT : saldoEUR;
+  const val = prompt(`Saldo actual de la cuenta ${moneda}:`, cur.toFixed(2));
+  if (val === null) return;
+  const n = parseFloat(val);
+  if (isNaN(n)) return;
+  if (moneda === 'USDT') saldoUSDT = n;
+  else saldoEUR = n;
+  renderPortfolio();
+  scheduleSave();
 }
 
 function renderPortfolio() {
@@ -1173,7 +1226,7 @@ async function saveToDrive() {
     await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded })
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR })
     });
     saveToLocal();
     btn.className = 'drive-btn connected';
@@ -1189,7 +1242,7 @@ async function saveToDrive() {
 }
 
 function saveToLocal() {
-  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded })); } catch(e) {}
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR })); } catch(e) {}
 }
 
 function scheduleSave() {
