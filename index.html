@@ -1200,6 +1200,10 @@ async function loadFromDrive() {
         if (d.lastSaved) lastSaved = d.lastSaved;
         if (d.futuresOps) futuresOps = d.futuresOps;
         if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
+      if (d.saldoUSDT !== undefined) saldoUSDT = d.saldoUSDT;
+      if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
+        if (d.saldoUSDT !== undefined) saldoUSDT = d.saldoUSDT;
+        if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
         if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
         if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
         renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
@@ -1258,6 +1262,8 @@ function loadData() {
       if (d.lastSaved) lastSaved = d.lastSaved;
       if (d.futuresOps) futuresOps = d.futuresOps;
       if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
+      if (d.saldoUSDT !== undefined) saldoUSDT = d.saldoUSDT;
+      if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
       if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
       if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
     }
