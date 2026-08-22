@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.3</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.4</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -1307,6 +1307,7 @@ async function loadFromDrive() {
         if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
         if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
         renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
+        refreshAll();
         showToast('✓ Datos cargados desde Drive');
         updateSyncBar();
       } else {
