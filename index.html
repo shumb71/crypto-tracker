@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.2</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.3</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -739,7 +739,7 @@ function toggleCasarSelectorTracked(sellId) {
   }
 }
 
-// When user picks a buy in the add-link selector, auto-fill with buy's full qty
+// When user picks a buy in the add-link selector, auto-fill with its free (remaining) qty
 function onNewLinkBuyChange(sellId, sym) {
   const port = getPortfolio();
   const data = port[sym];
@@ -751,11 +751,16 @@ function onNewLinkBuyChange(sellId, sym) {
   casarSelectedBuy[sellId] = buyId;
   const buy = data.buys.find(b => b.id === buyId);
   if (!buy) return;
-  // Propose full buy qty — user can edit if needed
-  qtyEl.value = fmt(buy.qty, 6);
+  const links = portfolioMatches[sellId] || [];
+  const alreadyLinkedQty = links.find(l => l.buyId === buyId)?.qty || 0;
+  const freeQty = buy.remaining + alreadyLinkedQty;
+  // Propose the free (available) qty of this buy — user can edit if needed
+  qtyEl.value = fmt(freeQty, 6);
 }
 
-function renderWallet() {
+function renderWallet(totalUnrealized, totalRealized) {
+  const totalPnl = (totalUnrealized || 0) + (totalRealized || 0);
+  const pnlCls = totalPnl >= 0 ? 'green' : 'red';
   return `<div class="card" style="margin-bottom:16px;">
     <div class="card-title">Saldos de cuenta</div>
     <div class="metric-grid">
@@ -772,6 +777,11 @@ function renderWallet() {
           <span>${fmt(saldoEUR,2)} EUR</span>
           <button onclick="editSaldo('EUR')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
         </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">P&L Total (todas las cryptos)</div>
+        <div class="metric-value ${pnlCls}" style="font-size:16px;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</div>
+        <div class="small" style="color:#aaa;margin-top:2px;">No realizado: <span class="${totalUnrealized>=0?'green':'red'}">${totalUnrealized>=0?'+':''}${fmt(totalUnrealized,2)}</span> · Realizado: <span class="${totalRealized>=0?'green':'red'}">${totalRealized>=0?'+':''}${fmt(totalRealized,2)}</span></div>
       </div>
 
     </div>
@@ -794,6 +804,8 @@ function renderPortfolio() {
   const port = getPortfolio();
   let html = '';
   let hasAny = false;
+  let totalUnrealizedPnl = 0;
+  let totalRealizedPnl = 0;
 
   Object.entries(port).forEach(([sym, data]) => {
     if (!data.buys.length && !data.sells.length) return;
@@ -812,12 +824,14 @@ function renderPortfolio() {
       });
     });
     const hasRealized = data.sells.some(s => (portfolioMatches[s.id] || []).length > 0);
+    totalRealizedPnl += realizedPnl;
 
     if (hasOpen) {
       const avgPrice = data.totalCost / data.totalQty;
       const curValue = data.totalQty * curPrice;
       const pnl      = curValue - data.totalCost;
       const pnlPct   = data.totalCost > 0 ? (pnl / data.totalCost) * 100 : 0;
+      totalUnrealizedPnl += pnl;
       const cls      = pnl >= 0 ? 'green' : 'red';
       const rCls     = realizedPnl >= 0 ? 'green' : 'red';
       const uncasadaQty = data.buys.filter(b => !b.excluded).reduce((s,b) => s + b.remaining, 0);
@@ -1000,9 +1014,10 @@ function renderPortfolio() {
           return `<option value="${b.id}">${b.date} · ${fmt(b.qty,6)} ${sym} · ${fmtPrice(b.price)} · libre: ${fmt(freeQty,6)}</option>`;
         }).join('');
 
-        // Propose qty = full qty of first available buy
+        // Propose qty = free (available) qty of first available buy
         const firstBuy = availBuys[0];
-        const proposed = firstBuy ? fmt(firstBuy.qty, 6) : '0';
+        const firstFreeQty = firstBuy ? (firstBuy.remaining + (links.find(l => l.buyId === firstBuy.id)?.qty || 0)) : 0;
+        const proposed = firstBuy ? fmt(firstFreeQty, 6) : '0';
 
         html += `<div id="casar_${sell.id}" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
           <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">Añadir compra asignada</div>
@@ -1023,7 +1038,7 @@ function renderPortfolio() {
     html += `</div></div>`; // close portdetail + card
   });
 
-  document.getElementById('portfolioContent').innerHTML = renderWallet() + (hasAny
+  document.getElementById('portfolioContent').innerHTML = renderWallet(totalUnrealizedPnl, totalRealizedPnl) + (hasAny
     ? html
     : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>');
 
@@ -1123,19 +1138,69 @@ function runSim() {
 
 function confirmSell(sym, qty, price, pnl, costBasis) {
   const today = new Date().toISOString().slice(0,10);
-  saleHistory.push({ sym, qty, price, pnl, costBasis, date: today, id: Date.now() });
-  operations.push({ id: Date.now()+1, type:'sell', sym, qty, price, date: today });
+  operations.push({ id: Date.now(), type:'sell', sym, qty, price, date: today });
+  operations.sort((a,b) => a.date.localeCompare(b.date));
+  renderOpsTable();
+  refreshAll();
   document.getElementById('simResult').innerHTML = '<div class="small green" style="margin-top:10px;"><i class="ti ti-check"></i> Venta registrada. Puedes verla en Historial.</div>';
   scheduleSave();
+}
+
+// Builds the sales history directly from `operations`, using real casaciones
+// (portfolioMatches) where they exist, and falling back to FIFO against the
+// remaining (uncasado) buy pool for any part of a sell that isn't casada.
+function buildHistoryFromOperations() {
+  const port = getPortfolio();
+  const history = [];
+
+  Object.entries(port).forEach(([sym, data]) => {
+    if (!data.sells.length) return;
+
+    // Pool of buys available for FIFO fallback = what's left uncasado today
+    const poolBuys = data.buys
+      .filter(b => !b.excluded)
+      .map(b => ({ id: b.id, date: b.date, price: b.price, avail: b.remaining }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const sellsSorted = [...data.sells].sort((a, b) => a.date.localeCompare(b.date));
+
+    sellsSorted.forEach(sell => {
+      const links = portfolioMatches[sell.id] || [];
+      let matchedQty = 0, matchedCost = 0;
+      links.forEach(link => {
+        const buy = data.buys.find(b => b.id === link.buyId);
+        if (buy) { matchedQty += link.qty; matchedCost += link.qty * buy.price; }
+      });
+
+      let uncoveredQty = Math.max(0, sell.qty - matchedQty);
+      let uncoveredCost = 0;
+      for (const pb of poolBuys) {
+        if (uncoveredQty <= 0.000001) break;
+        if (pb.avail <= 0.000001) continue;
+        const take = Math.min(pb.avail, uncoveredQty);
+        uncoveredCost += take * pb.price;
+        pb.avail -= take;
+        uncoveredQty -= take;
+      }
+
+      const costBasis = matchedCost + uncoveredCost;
+      const pnl = sell.qty * sell.price - costBasis;
+      history.push({ sym, qty: sell.qty, price: sell.price, costBasis, pnl, date: sell.date, id: sell.id });
+    });
+  });
+
+  history.sort((a, b) => a.date.localeCompare(b.date));
+  return history;
 }
 
 function renderHistory() {
   const tbody = document.getElementById('histTable');
   const empty = document.getElementById('histEmpty');
-  if (!saleHistory.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  const history = buildHistoryFromOperations();
+  if (!history.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   let totalPnl = 0;
-  tbody.innerHTML = saleHistory.map(h => {
+  tbody.innerHTML = history.map(h => {
     totalPnl += h.pnl;
     const cls = h.pnl >= 0 ? 'green' : 'red';
     const pct = h.costBasis > 0 ? (h.pnl / h.costBasis * 100) : 0;
