@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.0</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.2</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -413,6 +413,36 @@ function addOperation() {
 
 function deleteOp(id) {
   if (!confirm('¿Eliminar esta operación?')) return;
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+
+  // Revertir el efecto en el saldo USDT/EUR que se aplicó al crear la operación
+  if (op.cuenta) {
+    const total = op.qty * op.price;
+    if (op.type === 'buy') {
+      if (op.cuenta === 'USDT') saldoUSDT += total;
+      else saldoEUR += total;
+    } else {
+      if (op.cuenta === 'USDT') saldoUSDT -= total;
+      else saldoEUR -= total;
+    }
+  }
+
+  // Limpiar referencias huérfanas en casaciones (portfolioMatches)
+  if (op.type === 'sell') {
+    delete portfolioMatches[id];
+  } else {
+    Object.keys(portfolioMatches).forEach(sellId => {
+      portfolioMatches[sellId] = (portfolioMatches[sellId] || []).filter(l => l.buyId !== id);
+      if (!portfolioMatches[sellId].length) delete portfolioMatches[sellId];
+    });
+  }
+
+  // Limpiar referencias huérfanas en exclusiones (portfolioExcluded)
+  if (op.type === 'buy' && portfolioExcluded[op.sym]) {
+    portfolioExcluded[op.sym] = portfolioExcluded[op.sym].filter(bId => bId !== id);
+  }
+
   operations = operations.filter(o => o.id !== id);
   renderOpsTable();
   refreshAll();
@@ -958,7 +988,12 @@ function renderPortfolio() {
         html += `</div>`;
 
         // Add new link selector — shown inside toggleable box
-        const availBuys = data.buys.filter(b => b.id !== undefined);
+        const availBuys = data.buys.filter(b => {
+          if (b.id === undefined) return false;
+          const alreadyLinkedQty = links.find(l => l.buyId === b.id)?.qty || 0;
+          const freeQty = b.remaining + alreadyLinkedQty;
+          return freeQty > 0.000001;
+        });
         const opts = availBuys.map(b => {
           const alreadyLinkedQty = links.find(l => l.buyId === b.id)?.qty || 0;
           const freeQty = b.remaining + alreadyLinkedQty;
