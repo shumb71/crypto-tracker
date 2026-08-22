@@ -115,7 +115,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.4</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.5</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -598,6 +598,16 @@ function togglePortfolioDetail(sym) {
   if (chk) chk.checked = !!portfolioExpanded[sym];
 }
 
+// Total qty of `buyId` already linked to sells OTHER than `excludeSellId`
+function getBuyLinkedQtyExcluding(buyId, excludeSellId) {
+  let total = 0;
+  Object.entries(portfolioMatches).forEach(([sId, links]) => {
+    if (Number(sId) === Number(excludeSellId)) return;
+    links.forEach(l => { if (l.buyId === buyId) total += l.qty; });
+  });
+  return total;
+}
+
 // Add or update a buy link for a sell — updates DOM directly, no full re-render
 function addBuyLink(sellId, sym) {
   const selEl = document.getElementById('newlink_buy_' + sellId);
@@ -606,6 +616,15 @@ function addBuyLink(sellId, sym) {
   const buyId = parseInt(selEl.value);
   const qty   = parseFloat(qtyEl.value);
   if (!buyId || isNaN(qty) || qty <= 0) { alert('Selecciona una compra e indica una cantidad válida.'); return; }
+
+  const buyOp = operations.find(o => o.id === buyId);
+  if (!buyOp) { alert('Esa compra ya no existe.'); return; }
+  const linkedElsewhere = getBuyLinkedQtyExcluding(buyId, sellId);
+  const available = buyOp.qty - linkedElsewhere;
+  if (qty > available + 0.000001) {
+    alert(`Esta compra del ${buyOp.date} solo tiene ${fmt(available,6)} ${sym} libres (ya tiene ${fmt(linkedElsewhere,6)} asignados a otras ventas). No puedes asignar ${fmt(qty,6)}.`);
+    return;
+  }
 
   if (!portfolioMatches[sellId]) portfolioMatches[sellId] = [];
   const existing = portfolioMatches[sellId].find(l => l.buyId === buyId);
@@ -800,12 +819,44 @@ function editSaldo(moneda) {
   scheduleSave();
 }
 
+// Detects data problems in portfolioMatches: orphaned links (pointing to
+// deleted operations) and buys linked with more quantity than they actually have.
+function checkPortfolioIntegrity() {
+  const issues = [];
+
+  Object.entries(portfolioMatches).forEach(([sellId, links]) => {
+    const sellOp = operations.find(o => o.id === Number(sellId));
+    if (!sellOp) {
+      issues.push(`Casación huérfana: la venta (id ${sellId}) ya no existe pero tiene ${links.length} enlace(s) guardados.`);
+      return;
+    }
+    links.forEach(link => {
+      const buyOp = operations.find(o => o.id === link.buyId);
+      if (!buyOp) issues.push(`Casación huérfana: una compra vinculada a la venta de ${sellOp.sym} del ${sellOp.date} ya no existe.`);
+    });
+  });
+
+  const linkedTotals = {};
+  Object.values(portfolioMatches).forEach(links => links.forEach(l => {
+    linkedTotals[l.buyId] = (linkedTotals[l.buyId] || 0) + l.qty;
+  }));
+  Object.entries(linkedTotals).forEach(([buyId, total]) => {
+    const buyOp = operations.find(o => o.id === Number(buyId));
+    if (buyOp && total > buyOp.qty + 0.000001) {
+      issues.push(`La compra de ${fmt(buyOp.qty,6)} ${buyOp.sym} del ${buyOp.date} tiene ${fmt(total,6)} ${buyOp.sym} casados en total — más de lo que compraste.`);
+    }
+  });
+
+  return issues;
+}
+
 function renderPortfolio() {
   const port = getPortfolio();
   let html = '';
   let hasAny = false;
   let totalUnrealizedPnl = 0;
   let totalRealizedPnl = 0;
+  const integrityIssues = checkPortfolioIntegrity();
 
   Object.entries(port).forEach(([sym, data]) => {
     if (!data.buys.length && !data.sells.length) return;
@@ -1038,7 +1089,16 @@ function renderPortfolio() {
     html += `</div></div>`; // close portdetail + card
   });
 
-  document.getElementById('portfolioContent').innerHTML = renderWallet(totalUnrealizedPnl, totalRealizedPnl) + (hasAny
+  const integrityHtml = integrityIssues.length
+    ? `<div class="card" style="margin-bottom:16px;border:1px solid #f59e0b;background:rgba(245,158,11,0.08);">
+        <div class="card-title" style="color:#f59e0b;"><i class="ti ti-alert-triangle"></i> Se han detectado ${integrityIssues.length} incidencia(s) en las casaciones</div>
+        <ul style="margin:6px 0 0 18px;padding:0;font-size:12px;color:#b45309;">
+          ${integrityIssues.map(i => `<li style="margin-bottom:4px;">${i}</li>`).join('')}
+        </ul>
+      </div>`
+    : '';
+
+  document.getElementById('portfolioContent').innerHTML = renderWallet(totalUnrealizedPnl, totalRealizedPnl) + integrityHtml + (hasAny
     ? html
     : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>');
 
