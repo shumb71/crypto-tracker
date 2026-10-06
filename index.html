@@ -106,6 +106,17 @@ tr:last-child td { border-bottom: none; }
 .tramo-liquidado td { color: #dc2626 !important; text-decoration: line-through; opacity: 0.75; }
 .tramo-liquidado td.no-strike { text-decoration: none; }
 .badge-liquidado { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-weight:600; margin-left:6px; vertical-align:middle; }
+.badge-reset { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#f3f4f6; color:#555; border:1px solid #d1d5db; font-weight:600; margin-left:6px; vertical-align:middle; }
+.metric.clickable { cursor:pointer; transition: background 0.15s, box-shadow 0.15s; }
+.metric.clickable:hover { background:#eef2ff; box-shadow: 0 0 0 1px #c7d2fe inset; }
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:flex-start; justify-content:center; padding:4vh 12px; z-index:900; overflow-y:auto; }
+.modal-bg.open { display:flex; }
+.modal-box { background:#fff; border-radius:14px; padding:1.1rem 1.25rem 1.25rem; width:100%; max-width:720px; box-shadow:0 20px 50px rgba(0,0,0,0.25); }
+.modal-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.saldo-chart-wrap { position:relative; }
+.saldo-chart-wrap svg { width:100%; height:auto; display:block; touch-action:pan-y; }
+.saldo-tip { position:absolute; pointer-events:none; background:#1a1a1a; color:#fff; font-size:11px; line-height:1.45; padding:6px 9px; border-radius:8px; white-space:nowrap; display:none; z-index:2; }
+.sp-btn.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
 .badge-parcial { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#fffbeb; color:#92400e; border:1px solid #fde68a; font-weight:600; margin-left:6px; vertical-align:middle; }
 </style>
 </head>
@@ -115,7 +126,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.5</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.6</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -132,6 +143,7 @@ tr:last-child td { border-bottom: none; }
     <button class="nav-btn" onclick="showSection('libro',this)"><i class="ti ti-book"></i> Libro</button>
     <button class="nav-btn" onclick="showSection('conceptos',this)"><i class="ti ti-bulb"></i> Conceptos</button>
     <button class="nav-btn" onclick="showSection('futuros',this)"><i class="ti ti-trending-up"></i> Futuros</button>
+    <button class="nav-btn" onclick="showSection('sp500',this)"><i class="ti ti-chart-candle"></i> S&amp;P 500</button>
   </nav>
 
   <div id="precios" class="section active">
@@ -209,6 +221,16 @@ tr:last-child td { border-bottom: none; }
     </div>
   </div>
 
+  <div id="sp500" class="section">
+    <div class="card">
+      <div class="card-title">S&amp;P 500 — cotización y gráfico</div>
+      <div class="row" id="spButtons"></div>
+      <div id="spQuote" class="tradingview-widget-container" style="min-height:90px;margin-bottom:10px;"></div>
+      <div id="spChart" class="tradingview-widget-container" style="height:520px;"></div>
+      <div class="small muted" style="margin-top:8px;">Datos de TradingView. Si una opción sale bloqueada o en blanco, prueba otra de las de arriba. <a id="spLink" href="#" target="_blank" rel="noopener">Abrir en TradingView</a></div>
+    </div>
+  </div>
+
   <div id="historial" class="section">
     <div class="card">
       <div class="card-title">Ventas realizadas</div>
@@ -234,6 +256,7 @@ tr:last-child td { border-bottom: none; }
 
 <div class="toast" id="toast"></div>
 <div class="toast" id="toast"></div>
+<div class="modal-bg" id="saldoModal" onclick="if(event.target===this)closeSaldoChart()"><div class="modal-box" id="saldoModalBox"></div></div>
 
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script>
@@ -250,6 +273,10 @@ let futuresOps = [];
 let saldoUSDT = 0;
 let saldoEUR = 0;
 let futuresSaldo = 0;
+// saldoHistory: { USDT: [ {t, v, m}, ... ], EUR: [...] } — un punto por cada cambio de saldo
+let saldoHistory = { USDT: [], EUR: [] };
+// portfolioResets: { sym -> [ {id, date, qty, items:[{buyId, qty}]} ] } — restos puestos a cero
+let portfolioResets = {};
 let lastSaved = null;
 let accessToken = null;
 let driveFileId = null;
@@ -267,6 +294,36 @@ function fmt(n, d=2) {
   if (isNaN(n)) return '—';
   return Number(n).toLocaleString('es-ES', {minimumFractionDigits: d, maximumFractionDigits: d});
 }
+// Orden de listados: fecha más reciente primero; a igual fecha, lo último añadido primero
+function byDateDesc(a, b) {
+  return (b.date || '').localeCompare(a.date || '') || ((b.id || 0) - (a.id || 0));
+}
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fmtQty(n) {
+  return Number(n).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 8});
+}
+
+// Crea un punto en el histórico de saldo SOLO si la cantidad ha cambiado de verdad
+function recordSaldo(moneda, motivo) {
+  if (!saldoHistory || typeof saldoHistory !== 'object') saldoHistory = {};
+  if (!Array.isArray(saldoHistory[moneda])) saldoHistory[moneda] = [];
+  const h = saldoHistory[moneda];
+  const v = moneda === 'USDT' ? saldoUSDT : saldoEUR;
+  const last = h[h.length - 1];
+  if (last && Math.abs(last.v - v) < 0.0000001) return;
+  h.push({ t: Date.now(), v, m: motivo });
+}
+// Garantiza un primer punto y deja el histórico cuadrado con el saldo cargado
+function ensureSaldoBaseline() {
+  ['USDT','EUR'].forEach(m => {
+    const has = saldoHistory && Array.isArray(saldoHistory[m]) && saldoHistory[m].length;
+    recordSaldo(m, has ? 'Sincronización de datos' : 'Saldo inicial');
+  });
+}
+
 function fmtPrice(n) {
   if (!n || isNaN(n)) return '—';
   if (n >= 1000) return fmt(n, 2);
@@ -285,6 +342,7 @@ function showSection(id, btn) {
   if (id === 'libro') renderLibro();
   if (id === 'conceptos') renderConceptos();
   if (id === 'futuros') renderFuturos();
+  if (id === 'sp500') renderSP500();
   if (id === 'operaciones') { renderOpsTable(); populateSymSelects(); }
 }
 
@@ -400,6 +458,7 @@ function addOperation() {
     if (cuenta === 'USDT') saldoUSDT += total;
     else saldoEUR += total;
   }
+  recordSaldo(cuenta, `${type==='buy'?'Compra':'Venta'} ${sym}`);
   operations.push({ id: Date.now(), type, sym, qty, price, date, notes, cuenta });
   operations.sort((a,b) => a.date.localeCompare(b.date));
   document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> ${type==='buy'?'Compra':'Venta'} de ${fmt(qty,6)} ${sym} a ${fmtPrice(price)} USDT — ${cuenta === 'USDT' ? (type==='buy'?'Debitado de':'Abonado en') : (type==='buy'?'Debitado de':'Abonado en')} cuenta ${cuenta}.`;
@@ -426,6 +485,7 @@ function deleteOp(id) {
       if (op.cuenta === 'USDT') saldoUSDT -= total;
       else saldoEUR -= total;
     }
+    recordSaldo(op.cuenta, `Eliminada ${op.type==='buy'?'compra':'venta'} ${op.sym}`);
   }
 
   // Limpiar referencias huérfanas en casaciones (portfolioMatches)
@@ -441,6 +501,17 @@ function deleteOp(id) {
   // Limpiar referencias huérfanas en exclusiones (portfolioExcluded)
   if (op.type === 'buy' && portfolioExcluded[op.sym]) {
     portfolioExcluded[op.sym] = portfolioExcluded[op.sym].filter(bId => bId !== id);
+  }
+
+  // Limpiar resets que apuntaban a esta compra
+  if (op.type === 'buy' && portfolioResets[op.sym]) {
+    portfolioResets[op.sym] = portfolioResets[op.sym]
+      .map(r => {
+        const items = (r.items || []).filter(it => it.buyId !== id);
+        return { ...r, items, qty: items.reduce((s, it) => s + it.qty, 0) };
+      })
+      .filter(r => r.items.length);
+    if (!portfolioResets[op.sym].length) delete portfolioResets[op.sym];
   }
 
   operations = operations.filter(o => o.id !== id);
@@ -518,6 +589,7 @@ function renderOpsTable() {
     tbody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:1rem 0 0.5rem;">No hay operaciones con esos filtros.</td></tr>';
     return;
   }
+  filtered = [...filtered].sort(byDateDesc);
   tbody.innerHTML = filtered.map(o => `
     <tr>
       <td><span class="tag ${o.type==='buy'?'tag-buy':'tag-sell'}">${o.type==='buy'?'Compra':'Venta'}</span></td>
@@ -560,9 +632,16 @@ function getPortfolio() {
       });
     });
 
+    const resetByBuy = {};
+    (portfolioResets[sym] || []).forEach(r => (r.items || []).forEach(it => {
+      resetByBuy[it.buyId] = (resetByBuy[it.buyId] || 0) + it.qty;
+    }));
+
     const buyList = buys.map(b => {
       const bm = buyMap[b.id];
-      bm.remaining = Math.max(0, bm.qty - bm.saldadoQty);
+      bm.resetQty = resetByBuy[b.id] || 0;
+      bm.remaining = Math.max(0, bm.qty - bm.saldadoQty - bm.resetQty);
+      if (bm.remaining < 0.0000000001) bm.remaining = 0;
       return bm;
     });
 
@@ -573,7 +652,7 @@ function getPortfolio() {
       if (!excluded) { totalQty += b.remaining; totalCost += b.remaining * b.price; }
     });
 
-    port[sym] = { buys: buyList, sells, totalQty, totalCost };
+    port[sym] = { buys: buyList, sells, totalQty, totalCost, resets: portfolioResets[sym] || [] };
   });
   return port;
 }
@@ -620,7 +699,8 @@ function addBuyLink(sellId, sym) {
   const buyOp = operations.find(o => o.id === buyId);
   if (!buyOp) { alert('Esa compra ya no existe.'); return; }
   const linkedElsewhere = getBuyLinkedQtyExcluding(buyId, sellId);
-  const available = buyOp.qty - linkedElsewhere;
+  const resetQtyBuy = (portfolioResets[sym] || []).reduce((s, r) => s + (r.items || []).filter(it => it.buyId === buyId).reduce((a, it) => a + it.qty, 0), 0);
+  const available = buyOp.qty - linkedElsewhere - resetQtyBuy;
   if (qty > available + 0.000001) {
     alert(`Esta compra del ${buyOp.date} solo tiene ${fmt(available,6)} ${sym} libres (ya tiene ${fmt(linkedElsewhere,6)} asignados a otras ventas). No puedes asignar ${fmt(qty,6)}.`);
     return;
@@ -783,18 +863,18 @@ function renderWallet(totalUnrealized, totalRealized) {
   return `<div class="card" style="margin-bottom:16px;">
     <div class="card-title">Saldos de cuenta</div>
     <div class="metric-grid">
-      <div class="metric">
-        <div class="metric-label">Cuenta USDT</div>
+      <div class="metric clickable" onclick="openSaldoChart('USDT')" title="Pulsa para ver el gráfico del saldo">
+        <div class="metric-label">Cuenta USDT <i class="ti ti-chart-line" style="font-size:12px;"></i></div>
         <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
           <span>${fmt(saldoUSDT,2)} USDT</span>
-          <button onclick="editSaldo('USDT')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+          <button onclick="event.stopPropagation();editSaldo('USDT')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
         </div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Cuenta EUR</div>
+      <div class="metric clickable" onclick="openSaldoChart('EUR')" title="Pulsa para ver el gráfico del saldo">
+        <div class="metric-label">Cuenta EUR <i class="ti ti-chart-line" style="font-size:12px;"></i></div>
         <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
           <span>${fmt(saldoEUR,2)} EUR</span>
-          <button onclick="editSaldo('EUR')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+          <button onclick="event.stopPropagation();editSaldo('EUR')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
         </div>
       </div>
       <div class="metric">
@@ -815,7 +895,148 @@ function editSaldo(moneda) {
   if (isNaN(n)) return;
   if (moneda === 'USDT') saldoUSDT = n;
   else saldoEUR = n;
+  recordSaldo(moneda, 'Ajuste manual');
   renderPortfolio();
+  scheduleSave();
+}
+
+/* ===== GRÁFICO DE SALDOS ===== */
+let saldoChartPts = [];
+
+function fmtFechaHora(t) {
+  return new Date(t).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function closeSaldoChart() {
+  document.getElementById('saldoModal').classList.remove('open');
+}
+
+function openSaldoChart(moneda) {
+  const h = [...((saldoHistory && saldoHistory[moneda]) || [])].sort((a, b) => a.t - b.t);
+  const cur = moneda === 'USDT' ? saldoUSDT : saldoEUR;
+  const W = 640, H = 260, L = 62, R = 14, T = 14, B = 30;
+  let chart = '<div class="muted small" style="padding:1rem 0;">Todavía no hay puntos registrados.</div>';
+  saldoChartPts = [];
+
+  if (h.length) {
+    const t0 = h[0].t;
+    let t1 = Math.max(Date.now(), h[h.length - 1].t);
+    if (t1 <= t0) t1 = t0 + 1;
+    let vMin = Math.min(...h.map(p => p.v)), vMax = Math.max(...h.map(p => p.v));
+    if (vMax - vMin < 0.01) { vMin -= 1; vMax += 1; }
+    const pad = (vMax - vMin) * 0.1; vMin -= pad; vMax += pad;
+    const X = t => L + (t - t0) / (t1 - t0) * (W - L - R);
+    const Y = v => T + (vMax - v) / (vMax - vMin) * (H - T - B);
+
+    let grid = '';
+    for (let i = 0; i <= 4; i++) {
+      const v = vMin + (vMax - vMin) * i / 4, y = Y(v);
+      grid += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="#eee" stroke-width="1"/>`
+            + `<text x="${L-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${fmt(v, 0)}</text>`;
+    }
+    let d = `M${X(h[0].t).toFixed(1)},${Y(h[0].v).toFixed(1)}`;
+    for (let i = 1; i < h.length; i++) d += ` H${X(h[i].t).toFixed(1)} V${Y(h[i].v).toFixed(1)}`;
+    d += ` H${X(t1).toFixed(1)}`;
+    const area = d + ` V${H-B} H${X(h[0].t).toFixed(1)} Z`;
+    const dots = h.map((p, i) => `<circle id="sdot_${i}" cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3.5" fill="#fff" stroke="#6366f1" stroke-width="2"/>`).join('');
+    const fDia = t => new Date(t).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
+
+    saldoChartPts = h.map(p => ({ ...p, x: X(p.t), y: Y(p.v) }));
+    chart = `<div class="saldo-chart-wrap" id="saldoChartWrap">
+      <svg viewBox="0 0 ${W} ${H}" id="saldoSvg" onpointermove="saldoChartHover(event,'${moneda}')" onpointerdown="saldoChartHover(event,'${moneda}')" onpointerleave="saldoChartLeave()">
+        ${grid}
+        <path d="${area}" fill="rgba(99,102,241,0.08)" stroke="none"/>
+        <path d="${d}" fill="none" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+        ${dots}
+        <text x="${L}" y="${H-8}" font-size="10" fill="#888">${fDia(t0)}</text>
+        <text x="${W-R}" y="${H-8}" font-size="10" fill="#888" text-anchor="end">hoy</text>
+      </svg>
+      <div class="saldo-tip" id="saldoTip"></div>
+    </div>`;
+  }
+
+  // Lista de movimientos: lo más reciente arriba
+  const rows = h.map((p, i) => ({ ...p, delta: i > 0 ? p.v - h[i-1].v : null })).reverse().map(p => {
+    const cls = p.delta === null ? 'muted' : (p.delta >= 0 ? 'green' : 'red');
+    return `<tr>
+      <td style="white-space:nowrap;">${fmtFechaHora(p.t)}</td>
+      <td>${p.m || '—'}</td>
+      <td class="${cls}" style="white-space:nowrap;">${p.delta === null ? '—' : (p.delta >= 0 ? '+' : '') + fmt(p.delta, 2)}</td>
+      <td style="white-space:nowrap;font-weight:500;">${fmt(p.v, 2)} ${moneda}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('saldoModalBox').innerHTML = `
+    <div class="modal-head">
+      <div>
+        <div class="card-title" style="margin-bottom:2px;">Evolución · Cuenta ${moneda}</div>
+        <div style="font-size:18px;font-weight:500;">${fmt(cur, 2)} ${moneda}</div>
+      </div>
+      <button onclick="closeSaldoChart()"><i class="ti ti-x"></i> Cerrar</button>
+    </div>
+    ${chart}
+    <div class="small muted" style="margin:6px 0 12px;">${h.length} punto(s) · se crea uno cada vez que cambia el saldo, por una operación o a mano.</div>
+    <div class="ovx" style="max-height:260px;overflow-y:auto;"><table>
+      <thead><tr><th>Fecha</th><th>Motivo</th><th>Cambio</th><th>Saldo</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="muted">Sin movimientos.</td></tr>'}</tbody>
+    </table></div>`;
+  document.getElementById('saldoModal').classList.add('open');
+}
+
+function saldoChartHover(ev, moneda) {
+  const svg = document.getElementById('saldoSvg'), tip = document.getElementById('saldoTip');
+  if (!svg || !tip || !saldoChartPts.length) return;
+  const rect = svg.getBoundingClientRect();
+  const scale = 640 / rect.width;
+  const x = (ev.clientX - rect.left) * scale;
+  let best = 0;
+  saldoChartPts.forEach((p, i) => { if (Math.abs(p.x - x) < Math.abs(saldoChartPts[best].x - x)) best = i; });
+  saldoChartPts.forEach((p, i) => {
+    const c = document.getElementById('sdot_' + i);
+    if (c) { c.setAttribute('r', i === best ? 5.5 : 3.5); c.setAttribute('fill', i === best ? '#6366f1' : '#fff'); }
+  });
+  const p = saldoChartPts[best];
+  tip.innerHTML = `${fmtFechaHora(p.t)}<br><strong>${fmt(p.v, 2)} ${moneda}</strong><br>${p.m || ''}`;
+  tip.style.display = 'block';
+  const px = p.x / scale, py = p.y / scale;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = px + 10; if (left + tw > rect.width) left = px - tw - 10; if (left < 0) left = 0;
+  let top = py - th - 8; if (top < 0) top = py + 10;
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+
+function saldoChartLeave() {
+  const tip = document.getElementById('saldoTip');
+  if (tip) tip.style.display = 'none';
+  saldoChartPts.forEach((p, i) => {
+    const c = document.getElementById('sdot_' + i);
+    if (c) { c.setAttribute('r', 3.5); c.setAttribute('fill', '#fff'); }
+  });
+}
+
+/* ===== RESET DE RESTOS ===== */
+// Pone a cero lo que quede de una cripto (restos por comisiones). No toca saldos,
+// casaciones ni P&L realizado: solo anota que ese resto ya no existe.
+function resetPosition(sym) {
+  const data = getPortfolio()[sym];
+  if (!data) return;
+  const items = data.buys.filter(b => !b.excluded && b.remaining > 0).map(b => ({ buyId: b.id, qty: b.remaining }));
+  const qty = items.reduce((s, it) => s + it.qty, 0);
+  if (!items.length || qty <= 0) { showToast('No queda nada que poner a cero en ' + sym); return; }
+  if (!confirm(`¿Poner a cero ${fmtQty(qty)} ${sym}?\n\nLa posición queda cerrada. No se tocan los saldos de cuenta ni el resultado.`)) return;
+  if (!portfolioResets[sym]) portfolioResets[sym] = [];
+  portfolioResets[sym].push({ id: Date.now(), date: todayISO(), qty, items });
+  refreshAll();
+  scheduleSave();
+  showToast(`✓ ${sym} puesto a cero`);
+}
+
+function undoReset(sym, resetId) {
+  if (!portfolioResets[sym]) return;
+  if (!confirm('¿Deshacer este reset? La cantidad vuelve a aparecer en el portfolio.')) return;
+  portfolioResets[sym] = portfolioResets[sym].filter(r => r.id !== resetId);
+  if (!portfolioResets[sym].length) delete portfolioResets[sym];
+  refreshAll();
   scheduleSave();
 }
 
@@ -895,6 +1116,7 @@ function renderPortfolio() {
             </label>
             <span style="font-size:17px;font-weight:500;">${sym}</span>
             <span class="sym-badge">${fmt(data.totalQty,6)} ${sym}</span>
+            <button onclick="resetPosition('${sym}')" title="Poner a cero el resto que queda (comisiones) sin tocar nada más" style="height:24px;padding:0 9px;font-size:11px;"><i class="ti ti-eraser"></i> Reset</button>
           </div>
           <div style="text-align:right;">
             <div style="font-size:17px;font-weight:500;">${fmt(curValue,2)} USDT</div>
@@ -935,9 +1157,11 @@ function renderPortfolio() {
           <thead><tr><th style="width:30px;">✓</th><th>Fecha</th><th>Cantidad</th><th>Precio compra</th><th>Coste</th><th>Estado / P&L</th><th>Notas</th></tr></thead>
           <tbody>`;
 
-      data.buys.forEach(b => {
-        const isLiq     = b.remaining < 0.000001 && b.saldadoQty > 0.000001;
-        const isParcial = !isLiq && b.saldadoQty > 0.000001;
+      [...data.buys].sort(byDateDesc).forEach(b => {
+        const hasReset  = b.resetQty > 0;
+        const isLiq     = b.remaining < 0.000001 && (b.saldadoQty > 0.000001 || hasReset);
+        const isParcial = !isLiq && (b.saldadoQty > 0.000001 || hasReset);
+        const resetBadge = hasReset ? `<span class="badge-reset">Reset ${fmtQty(b.resetQty)}</span>` : '';
         const isExcl    = b.excluded;
         const rowStyle  = isExcl ? 'opacity:0.45;' : '';
         const chk       = `<input type="checkbox" ${!isExcl?'checked':''} onchange="toggleExcludeBuy('${sym}',${b.id})" style="cursor:pointer;">`;
@@ -959,7 +1183,7 @@ function renderPortfolio() {
             <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty,6)}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmtPrice(b.price)}</td>
             <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty*b.price,2)} USDT</td>
-            <td><span class="badge-liquidado">Liquidado</span> <span class="${pnlCls}" style="font-weight:600;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>${sellDates?' <span style="color:#aaa;font-size:11px;">· '+sellDates+'</span>':''}</td>
+            <td>${b.saldadoQty > 0.000001 ? `<span class="badge-liquidado">Liquidado</span> <span class="${pnlCls}" style="font-weight:600;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>` : ''}${resetBadge}${sellDates?' <span style="color:#aaa;font-size:11px;">· '+sellDates+'</span>':''}</td>
             <td style="color:#aaa;font-size:12px;">${b.notes||'—'}</td>
           </tr>`;
         } else if (isParcial) {
@@ -971,7 +1195,7 @@ function renderPortfolio() {
             <td>${fmt(b.remaining,6)} <span style="color:#aaa;font-size:11px;">(de ${fmt(b.qty,6)})</span></td>
             <td style="cursor:pointer;" onclick="editOpPrice(${b.id})" title="Click para editar">${fmtPrice(b.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
             <td>${fmt(b.remaining*b.price,2)} USDT</td>
-            <td><span class="badge-parcial">Parcial</span> <span class="${tc}">${tp!==null?(tp>=0?'+':'')+fmt(tp,2)+' USDT':'—'}</span></td>
+            <td><span class="badge-parcial">Parcial</span>${resetBadge} <span class="${tc}">${tp!==null?(tp>=0?'+':'')+fmt(tp,2)+' USDT':'—'}</span></td>
             <td style="font-size:12px;color:#888;">${b.notes||'—'}</td>
           </tr>`;
         } else {
@@ -995,7 +1219,7 @@ function renderPortfolio() {
     if (data.sells.length) {
       html += `<div class="card-title" style="margin-top:14px;">Ventas</div>`;
 
-      data.sells.forEach(sell => {
+      [...data.sells].sort(byDateDesc).forEach(sell => {
         const links       = portfolioMatches[sell.id] || [];
         const linkedQty   = links.reduce((s, l) => s + l.qty, 0);
         const pending     = sell.qty - linkedQty;
@@ -1086,6 +1310,18 @@ function renderPortfolio() {
       });
     }
 
+    // ── Resets (restos puestos a cero) ───────────────────────────
+    if (data.resets && data.resets.length) {
+      html += `<div class="card-title" style="margin-top:14px;">Resets</div>`;
+      [...data.resets].sort(byDateDesc).forEach(r => {
+        html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:4px;">
+          <span class="badge-reset" style="margin-left:0;">Reset</span>
+          <span><strong>${r.date}</strong> · ${fmtQty(r.qty)} ${sym} puesto a cero (resto por comisiones)</span>
+          <button style="height:20px;padding:0 7px;font-size:10px;" onclick="undoReset('${sym}',${r.id})">Deshacer</button>
+        </div>`;
+      });
+    }
+
     html += `</div></div>`; // close portdetail + card
   });
 
@@ -1162,7 +1398,7 @@ function runSim() {
   const pnl = saleValue - costBasis;
   const pnlPct = (pnl / costBasis) * 100;
   const cls = pnl >= 0 ? 'green' : 'red';
-  const tramoRows = data.buys.map(b => {
+  const tramoRows = [...data.buys].sort(byDateDesc).map(b => {
     const qty = b.qty * ratio;
     const cost = qty * b.price;
     const val = qty * sellPrice;
@@ -1249,7 +1485,7 @@ function buildHistoryFromOperations() {
     });
   });
 
-  history.sort((a, b) => a.date.localeCompare(b.date));
+  history.sort(byDateDesc);
   return history;
 }
 
@@ -1366,6 +1602,9 @@ async function loadFromDrive() {
         if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
         if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
         if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
+        if (d.saldoHistory) saldoHistory = d.saldoHistory;
+        if (d.portfolioResets) portfolioResets = d.portfolioResets;
+        ensureSaldoBaseline();
         renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
         refreshAll();
         showToast('✓ Datos cargados desde Drive');
@@ -1388,7 +1627,7 @@ async function saveToDrive() {
     await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR })
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR, saldoHistory, portfolioResets })
     });
     saveToLocal();
     btn.className = 'drive-btn connected';
@@ -1404,7 +1643,7 @@ async function saveToDrive() {
 }
 
 function saveToLocal() {
-  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR })); } catch(e) {}
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR, saldoHistory, portfolioResets })); } catch(e) {}
 }
 
 function scheduleSave() {
@@ -1427,8 +1666,12 @@ function loadData() {
       if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
       if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
       if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
+      if (d.saldoHistory) saldoHistory = d.saldoHistory;
+      if (d.portfolioResets) portfolioResets = d.portfolioResets;
     }
   } catch(e) {}
+  ensureSaldoBaseline();
+  saveToLocal();
 }
 
 
@@ -1474,7 +1717,7 @@ function renderLibro() {
         + '<td class="haber">' + (haber !== null ? fmt(haber, 2) + ' USDT' : '—') + '</td>'
         + '<td class="' + (excluded ? '' : saldoClass) + '">' + saldoCell + '</td>'
         + '</tr>';
-    }).join('');
+    }).reverse().join(''); // el saldo se acumula de antiguo a nuevo; se muestra lo más reciente arriba
     const resultado = totalHaber - totalDebe;
     const resClass = resultado >= 0 ? 'saldo-pos' : 'saldo-neg';
     html += '<div class="card">'
@@ -1618,7 +1861,8 @@ function renderFuturos() {
 
   // Saldo card
   const pnlRealizado = futuresOps.filter(o => o.estado === 'cerrada').reduce((a, o) => a + (o.pnl || 0), 0);
-  const posAbiertas = futuresOps.filter(o => o.estado === 'abierta');
+  const futDesc = (a, b) => (b.fecha || '').localeCompare(a.fecha || '') || ((b.id || 0) - (a.id || 0));
+  const posAbiertas = futuresOps.filter(o => o.estado === 'abierta').sort(futDesc);
   const pnlNoReal = posAbiertas.reduce((a, o) => {
     const cur = livePrice(o.par.replace('-USDT','').replace('USDT',''));
     if (!cur) return a;
@@ -1725,7 +1969,7 @@ function renderFuturos() {
   </div>` : '';
 
   // Tabla historial futuros
-  const cerradas = futuresOps.filter(o => o.estado === 'cerrada');
+  const cerradas = futuresOps.filter(o => o.estado === 'cerrada').sort(futDesc);
   const histHtml = cerradas.length ? `<div class="card">
     <div class="card-title">Historial de operaciones cerradas</div>
     <div class="ovx"><table>
@@ -1888,6 +2132,49 @@ function runFutSim() {
     ${rr !== null ? `<div class="sim-row"><span>Ratio Riesgo/Beneficio</span><span style="font-weight:600;">1 : ${fmt(rr,2)}</span></div>` : ''}
   </div>`;
 }
+/* ===== S&P 500 (widget de TradingView) ===== */
+const SP_SYMBOLS = [
+  { id: 'FOREXCOM:SPXUSD', label: 'S&P 500 (CFD)' },
+  { id: 'AMEX:SPY',        label: 'SPY (ETF)' },
+  { id: 'SP:SPX',          label: 'Índice SPX' }
+];
+let spSymbol = SP_SYMBOLS[0].id;
+let spLoaded = null;
+
+function mountTV(elId, file, cfg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>';
+  const s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = 'https://s3.tradingview.com/external-embedding/' + file;
+  s.innerHTML = JSON.stringify(cfg);
+  el.appendChild(s);
+}
+
+function setSpSymbol(id) {
+  spSymbol = id;
+  renderSP500();
+}
+
+function renderSP500() {
+  document.getElementById('spButtons').innerHTML = SP_SYMBOLS.map(s =>
+    `<button class="sp-btn ${s.id===spSymbol?'active':''}" onclick="setSpSymbol('${s.id}')">${s.label}</button>`
+  ).join('');
+  document.getElementById('spLink').href = 'https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(spSymbol);
+  if (spLoaded === spSymbol) return; // no recargar el gráfico si ya está puesto
+  spLoaded = spSymbol;
+  mountTV('spQuote', 'embed-widget-symbol-info.js', {
+    symbol: spSymbol, width: '100%', locale: 'es', colorTheme: 'light', isTransparent: true
+  });
+  mountTV('spChart', 'embed-widget-advanced-chart.js', {
+    autosize: true, symbol: spSymbol, interval: 'D', timezone: 'Europe/Madrid',
+    theme: 'light', style: '1', locale: 'es', allow_symbol_change: false,
+    hide_side_toolbar: true, calendar: false, support_host: 'https://www.tradingview.com'
+  });
+}
+
 loadData();
 populateSymSelects();
 renderOpsTable();
