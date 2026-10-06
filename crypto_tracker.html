@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Portfolio Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: #f8f9fa; color: #1a1a1a; }
+.app { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 8px; }
+.header h1 { font-size: 18px; font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sync-bar { font-size: 11px; color: #888; display: flex; align-items: center; gap: 6px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.drive-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 12px; color: #555; height: 30px; transition: all 0.15s; }
+.drive-btn:hover { background: #f3f4f6; }
+.drive-btn.connected { border-color: #bbf7d0; background: #f0fdf4; color: #16a34a; }
+.drive-btn.saving { border-color: #bfdbfe; background: #eff6ff; color: #2563eb; }
+.nav { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; }
+.nav-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; cursor: pointer; font-size: 13px; color: #555; transition: all 0.15s; }
+.nav-btn:hover { background: #f3f4f6; }
+.nav-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 14px; }
+.card-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+.metric { background: #f8f9fa; border-radius: 8px; padding: 0.75rem 1rem; }
+.metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.metric-value { font-size: 16px; font-weight: 500; }
+.green { color: #16a34a; }
+.red { color: #dc2626; }
+.muted { color: #888; }
+.small { font-size: 12px; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+input, select { font-size: 13px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #1a1a1a; height: 34px; outline: none; }
+input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+input[type="number"] { width: 130px; }
+input[type="date"] { width: 148px; }
+input[type="text"] { width: 110px; }
+select { width: 115px; }
+button { padding: 6px 14px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 13px; color: #1a1a1a; height: 34px; transition: all 0.15s; white-space: nowrap; }
+button:hover { background: #f3f4f6; }
+button.primary { background: #6366f1; color: #fff; border-color: #6366f1; }
+button.primary:hover { background: #4f46e5; }
+button.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+button.danger:hover { background: #fee2e2; }
+button.success { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+button.success:hover { background: #dcfce7; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: #888; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; font-size: 11px; white-space: nowrap; }
+td { padding: 8px 8px; border-bottom: 1px solid #f9f9f9; }
+tr:last-child td { border-bottom: none; }
+.tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
+.tag-buy { background: #f0fdf4; color: #16a34a; }
+.tag-sell { background: #fef2f2; color: #dc2626; }
+.sym-badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: #f3f4f6; color: #555; }
+.ticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
+.ticker-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; }
+.ticker-sym { font-size: 11px; color: #888; font-weight: 500; }
+.ticker-price { font-size: 15px; font-weight: 500; margin: 3px 0 2px; }
+.ticker-chg { font-size: 12px; }
+.sym-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+.sym-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 99px; font-size: 12px; cursor: pointer; }
+.sym-chip:hover { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
+.sim-result-box { background: #f8f9fa; border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+.sim-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+.sim-row:last-child { border-bottom: none; font-weight: 500; font-size: 14px; }
+.hidden { display: none; }
+.ovx { overflow-x: auto; }
+.toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1a1a1a; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; }
+.toast.show { opacity: 1; }
+.concepto-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:16px; }
+.concepto-title { font-size:16px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.concepto-badge { font-size:11px; padding:2px 10px; border-radius:99px; background:#eff6ff; color:#2563eb; font-weight:500; }
+.concepto-desc { color:#444; line-height:1.65; font-size:13.5px; }
+.concepto-subtitulo { font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px; }
+.concepto-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0; }
+.concepto-item { background:#f8f9fa; border-radius:8px; padding:10px 12px; }
+.concepto-item-title { font-size:12px; font-weight:600; margin-bottom:3px; }
+.concepto-item-desc { font-size:12px; color:#555; line-height:1.5; }
+.concepto-alerta { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px; font-size:12px; color:#92400e; margin-top:10px; }
+.onda-diagram { display:flex; align-items:flex-end; gap:2px; height:80px; margin:12px 0; }
+.onda-bar { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+.onda-num { font-size:11px; font-weight:600; margin-top:4px; }
+.div-example { display:flex; gap:16px; margin:10px 0; flex-wrap:wrap; }
+.div-box { flex:1; min-width:160px; background:#f8f9fa; border-radius:8px; padding:10px 12px; }
+.div-box-title { font-size:12px; font-weight:600; margin-bottom:4px; }
+.div-box-desc { font-size:12px; color:#555; }
+.libro-table th.col-debe { color: #dc2626; }
+.libro-table th.col-haber { color: #16a34a; }
+.libro-table td.debe { color: #dc2626; font-weight:500; }
+.libro-table td.haber { color: #16a34a; font-weight:500; }
+.libro-table td.saldo-pos { color: #16a34a; font-weight:600; }
+.libro-table td.saldo-neg { color: #dc2626; font-weight:600; }
+.libro-table tr.total-row { background: #f8f9fa; font-weight:600; border-top: 2px solid #e5e7eb; }
+.libro-table tr.excluded { opacity: 0.4; text-decoration: line-through; }
+.libro-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#888; }
+.libro-toggle input { width:14px; height:14px; cursor:pointer; }
+.tramo-liquidado td { color: #dc2626 !important; text-decoration: line-through; opacity: 0.75; }
+.tramo-liquidado td.no-strike { text-decoration: none; }
+.badge-liquidado { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-weight:600; margin-left:6px; vertical-align:middle; }
+.badge-reset { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#f3f4f6; color:#555; border:1px solid #d1d5db; font-weight:600; margin-left:6px; vertical-align:middle; }
+.metric.clickable { cursor:pointer; transition: background 0.15s, box-shadow 0.15s; }
+.metric.clickable:hover { background:#eef2ff; box-shadow: 0 0 0 1px #c7d2fe inset; }
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:flex-start; justify-content:center; padding:4vh 12px; z-index:900; overflow-y:auto; }
+.modal-bg.open { display:flex; }
+.modal-box { background:#fff; border-radius:14px; padding:1.1rem 1.25rem 1.25rem; width:100%; max-width:720px; box-shadow:0 20px 50px rgba(0,0,0,0.25); }
+.modal-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.saldo-chart-wrap { position:relative; }
+.saldo-chart-wrap svg { width:100%; height:auto; display:block; touch-action:pan-y; }
+.saldo-tip { position:absolute; pointer-events:none; background:#1a1a1a; color:#fff; font-size:11px; line-height:1.45; padding:6px 9px; border-radius:8px; white-space:nowrap; display:none; z-index:2; }
+.sp-btn.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+.badge-parcial { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#fffbeb; color:#92400e; border:1px solid #fde68a; font-weight:600; margin-left:6px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Crypto Portfolio Tracker</h1>
+    <div class="header-right">
+      <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.6</span>
+      <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
+        <i class="ti ti-brand-google-drive"></i>
+        <span id="driveBtnText">Conectar Drive</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showSection('precios',this)"><i class="ti ti-chart-line"></i> Precios</button>
+    <button class="nav-btn" onclick="showSection('operaciones',this)"><i class="ti ti-list"></i> Operaciones</button>
+    <button class="nav-btn" onclick="showSection('portfolio',this)"><i class="ti ti-wallet"></i> Portfolio</button>
+    <button class="nav-btn" onclick="showSection('simulador',this)"><i class="ti ti-calculator"></i> Simulador</button>
+    <button class="nav-btn" onclick="showSection('historial',this)"><i class="ti ti-history"></i> Historial</button>
+    <button class="nav-btn" onclick="showSection('libro',this)"><i class="ti ti-book"></i> Libro</button>
+    <button class="nav-btn" onclick="showSection('conceptos',this)"><i class="ti ti-bulb"></i> Conceptos</button>
+    <button class="nav-btn" onclick="showSection('futuros',this)"><i class="ti ti-trending-up"></i> Futuros</button>
+    <button class="nav-btn" onclick="showSection('sp500',this)"><i class="ti ti-chart-candle"></i> S&amp;P 500</button>
+  </nav>
+
+  <div id="precios" class="section active">
+    <div class="card">
+      <div class="card-title">Gestionar monedas</div>
+      <div class="sym-chips" id="symChips"></div>
+      <div class="row">
+        <input type="text" id="newSym" placeholder="Ej: DOGE" />
+        <button onclick="addSymbol()"><i class="ti ti-plus"></i> Añadir</button>
+      </div>
+    </div>
+    <div class="ticker-grid" id="tickerGrid"></div>
+  </div>
+
+  <div id="operaciones" class="section">
+    <div class="card">
+      <div class="card-title">Nueva operación</div>
+      <div class="row">
+        <select id="opType"><option value="buy">Compra</option><option value="sell">Venta</option></select>
+        <select id="opSym"></select>
+        <input type="number" id="opQty" placeholder="Cantidad" step="any" />
+        <input type="date" id="opDate" />
+        <button onclick="loadPriceForDate()"><i class="ti ti-cloud-download"></i> Cargar precio</button>
+      </div>
+      <div class="row">
+        <input type="number" id="opPrice" placeholder="Precio USDT" step="any" />
+        <select id="opCuenta" style="width:110px;">
+          <option value="USDT">Cuenta USDT</option>
+          <option value="EUR">Cuenta EUR</option>
+        </select>
+        <input type="text" id="opNotes" placeholder="Notas (opcional)" style="flex:2;" />
+        <button class="primary" onclick="addOperation()"><i class="ti ti-plus"></i> Añadir operación</button>
+      </div>
+      <div id="opMsg" class="small muted" style="margin-top:4px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Operaciones registradas</div>
+      <div class="row" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <select id="filtroTipo" onchange="renderOpsTable()" style="width:120px;">
+          <option value="">Todos los tipos</option>
+          <option value="buy">Compra</option>
+          <option value="sell">Venta</option>
+        </select>
+        <select id="filtroSym" onchange="renderOpsTable()" style="width:120px;">
+          <option value="">Todos los pares</option>
+        </select>
+        <input type="date" id="filtroDesde" onchange="renderOpsTable()" placeholder="Desde" style="width:145px;" />
+        <input type="date" id="filtroHasta" onchange="renderOpsTable()" placeholder="Hasta" style="width:145px;" />
+        <button onclick="limpiarFiltros()" style="font-size:12px;height:30px;padding:0 10px;"><i class="ti ti-x"></i> Limpiar</button>
+        <span id="filtroCount" class="small muted"></span>
+      </div>
+      <div class="ovx">
+        <table>
+          <thead><tr><th>Tipo</th><th>Símbolo</th><th>Cantidad</th><th>Precio USDT</th><th>Total USDT</th><th>Fecha</th><th>Notas</th><th></th></tr></thead>
+          <tbody id="opsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="portfolio" class="section">
+    <div id="portfolioContent"></div>
+  </div>
+
+  <div id="simulador" class="section">
+    <div class="card">
+      <div class="card-title">Simulador de venta</div>
+      <div class="row">
+        <select id="simSym" onchange="updateSimQty()"></select>
+        <input type="number" id="simPrice" placeholder="Precio venta USDT" step="any" style="width:170px;" />
+        <input type="number" id="simQty" placeholder="Cantidad" step="any" style="width:140px;" />
+        <button class="primary" onclick="runSim()"><i class="ti ti-calculator"></i> Simular</button>
+      </div>
+      <div id="simResult"></div>
+    </div>
+  </div>
+
+  <div id="sp500" class="section">
+    <div class="card">
+      <div class="card-title">S&amp;P 500 — cotización y gráfico</div>
+      <div class="row" id="spButtons"></div>
+      <div id="spQuote" class="tradingview-widget-container" style="min-height:90px;margin-bottom:10px;"></div>
+      <div id="spChart" class="tradingview-widget-container" style="height:520px;"></div>
+      <div class="small muted" style="margin-top:8px;">Datos de TradingView. Si una opción sale bloqueada o en blanco, prueba otra de las de arriba. <a id="spLink" href="#" target="_blank" rel="noopener">Abrir en TradingView</a></div>
+    </div>
+  </div>
+
+  <div id="historial" class="section">
+    <div class="card">
+      <div class="card-title">Ventas realizadas</div>
+      <div class="ovx">
+        <table>
+          <thead><tr><th>Símbolo</th><th>Cantidad</th><th>Precio venta</th><th>Coste base</th><th>P&L USDT</th><th>P&L %</th><th>Fecha</th></tr></thead>
+          <tbody id="histTable"></tbody>
+        </table>
+      </div>
+      <div id="histEmpty" class="muted small" style="padding:0.75rem 0;">No hay ventas registradas.</div>
+    </div>
+  </div>
+</div>
+  <div id="libro" class="section">
+    <div id="libroContent"></div>
+  </div>
+  <div id="conceptos" class="section">
+    <div id="conceptosContent"></div>
+  </div>
+  <div id="futuros" class="section">
+    <div id="futurosContent"></div>
+  </div>
+
+<div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="saldoModal" onclick="if(event.target===this)closeSaldoChart()"><div class="modal-box" id="saldoModalBox"></div></div>
+
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+const CLIENT_ID = '906920921997-8db6mc841ls32ucitrtdavglqu64j16e.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILE_NAME = 'crypto_tracker_data.json';
+const DRIVE_FOLDER_NAME = 'CryptoTracker';
+
+let symbols = ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE'];
+let prices = {};
+let operations = [];
+let saleHistory = [];
+let futuresOps = [];
+let saldoUSDT = 0;
+let saldoEUR = 0;
+let futuresSaldo = 0;
+// saldoHistory: { USDT: [ {t, v, m}, ... ], EUR: [...] } — un punto por cada cambio de saldo
+let saldoHistory = { USDT: [], EUR: [] };
+// portfolioResets: { sym -> [ {id, date, qty, items:[{buyId, qty}]} ] } — restos puestos a cero
+let portfolioResets = {};
+let lastSaved = null;
+let accessToken = null;
+let driveFileId = null;
+let saveTimer = null;
+let tokenClient = null;
+
+function showToast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function fmt(n, d=2) {
+  if (isNaN(n)) return '—';
+  return Number(n).toLocaleString('es-ES', {minimumFractionDigits: d, maximumFractionDigits: d});
+}
+// Orden de listados: fecha más reciente primero; a igual fecha, lo último añadido primero
+function byDateDesc(a, b) {
+  return (b.date || '').localeCompare(a.date || '') || ((b.id || 0) - (a.id || 0));
+}
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fmtQty(n) {
+  return Number(n).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 8});
+}
+
+// Crea un punto en el histórico de saldo SOLO si la cantidad ha cambiado de verdad
+function recordSaldo(moneda, motivo) {
+  if (!saldoHistory || typeof saldoHistory !== 'object') saldoHistory = {};
+  if (!Array.isArray(saldoHistory[moneda])) saldoHistory[moneda] = [];
+  const h = saldoHistory[moneda];
+  const v = moneda === 'USDT' ? saldoUSDT : saldoEUR;
+  const last = h[h.length - 1];
+  if (last && Math.abs(last.v - v) < 0.0000001) return;
+  h.push({ t: Date.now(), v, m: motivo });
+}
+// Garantiza un primer punto y deja el histórico cuadrado con el saldo cargado
+function ensureSaldoBaseline() {
+  ['USDT','EUR'].forEach(m => {
+    const has = saldoHistory && Array.isArray(saldoHistory[m]) && saldoHistory[m].length;
+    recordSaldo(m, has ? 'Sincronización de datos' : 'Saldo inicial');
+  });
+}
+
+function fmtPrice(n) {
+  if (!n || isNaN(n)) return '—';
+  if (n >= 1000) return fmt(n, 2);
+  if (n >= 1) return fmt(n, 4);
+  return fmt(n, 6);
+}
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'portfolio') renderPortfolio();
+  if (id === 'simulador') populateSimSelect();
+  if (id === 'historial') renderHistory();
+  if (id === 'libro') renderLibro();
+  if (id === 'conceptos') renderConceptos();
+  if (id === 'futuros') renderFuturos();
+  if (id === 'sp500') renderSP500();
+  if (id === 'operaciones') { renderOpsTable(); populateSymSelects(); }
+}
+
+async function fetchPrices() {
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    const data = await res.json();
+    data.forEach(t => {
+      const sym = t.symbol.replace('USDT','');
+      if (symbols.includes(sym)) {
+        prices[sym] = { price: parseFloat(t.lastPrice), change: parseFloat(t.priceChangePercent) };
+      }
+    });
+    renderTickers();
+    refreshAll();
+    updateSyncBar();
+  } catch(e) {
+    document.getElementById('syncBar').innerHTML = '<span style="color:#dc2626">Error de conexión</span>';
+  }
+}
+
+function updateSyncBar() {
+  const now = new Date().toLocaleTimeString('es-ES');
+  const driveStatus = accessToken
+    ? (lastSaved ? `Drive: ${lastSaved}` : 'Drive conectado')
+    : 'Sin Drive (local)';
+  document.getElementById('syncBar').innerHTML = `<span class="live-dot"></span>Precios: ${now} | ${driveStatus}`;
+}
+
+function renderTickers() {
+  document.getElementById('tickerGrid').innerHTML = symbols.map(s => {
+    const p = prices[s];
+    if (!p) return `<div class="ticker-card"><div class="ticker-sym">${s}/USDT</div><div class="ticker-price muted">—</div></div>`;
+    const cls = p.change >= 0 ? 'green' : 'red';
+    return `<div class="ticker-card">
+      <div class="ticker-sym">${s}/USDT</div>
+      <div class="ticker-price">${fmtPrice(p.price)}</div>
+      <div class="ticker-chg ${cls}">${p.change >= 0 ? '+' : ''}${fmt(p.change,2)}% 24h</div>
+    </div>`;
+  }).join('');
+  renderSymChips();
+  populateSymSelects();
+}
+
+function renderSymChips() {
+  document.getElementById('symChips').innerHTML = symbols.map(s =>
+    `<span class="sym-chip" onclick="removeSymbol('${s}')" title="Click para eliminar"><i class="ti ti-x" style="font-size:10px"></i> ${s}</span>`
+  ).join('');
+}
+
+function addSymbol() {
+  const val = document.getElementById('newSym').value.trim().toUpperCase();
+  if (!val || symbols.includes(val)) return;
+  symbols.push(val);
+  document.getElementById('newSym').value = '';
+  fetchPrices();
+  scheduleSave();
+}
+
+function removeSymbol(s) {
+  symbols = symbols.filter(x => x !== s);
+  delete prices[s];
+  renderTickers();
+  scheduleSave();
+}
+
+function populateSymSelects() {
+  ['opSym','simSym'].forEach(id => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = symbols.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+  });
+}
+
+async function loadPriceForDate() {
+  const date = document.getElementById('opDate').value;
+  const sym = document.getElementById('opSym').value;
+  if (!date || !sym) { document.getElementById('opMsg').textContent = 'Selecciona símbolo y fecha primero.'; return; }
+  document.getElementById('opMsg').textContent = 'Cargando precio histórico de Binance...';
+  try {
+    const ts = new Date(date + 'T00:00:00Z').getTime();
+    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1d&startTime=${ts}&endTime=${ts+86400000}&limit=1`);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      const close = parseFloat(data[0][4]);
+      document.getElementById('opPrice').value = close;
+      document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> Precio de cierre del ${date}: <strong>${fmtPrice(close)} USDT</strong> — editable si lo necesitas.`;
+    } else {
+      document.getElementById('opMsg').textContent = 'No se encontraron datos para esa fecha.';
+    }
+  } catch(e) {
+    document.getElementById('opMsg').textContent = 'Error al cargar precio.';
+  }
+}
+
+function addOperation() {
+  const type   = document.getElementById('opType').value;
+  const sym    = document.getElementById('opSym').value;
+  const qty    = parseFloat(document.getElementById('opQty').value);
+  const price  = parseFloat(document.getElementById('opPrice').value);
+  const date   = document.getElementById('opDate').value;
+  const notes  = document.getElementById('opNotes').value.trim();
+  const cuenta = document.getElementById('opCuenta').value;
+  if (!sym || isNaN(qty) || qty <= 0 || isNaN(price) || price <= 0 || !date) {
+    document.getElementById('opMsg').textContent = 'Completa todos los campos correctamente.';
+    return;
+  }
+  const total = qty * price;
+  if (type === 'buy') {
+    if (cuenta === 'USDT') saldoUSDT -= total;
+    else saldoEUR -= total;
+  } else {
+    if (cuenta === 'USDT') saldoUSDT += total;
+    else saldoEUR += total;
+  }
+  recordSaldo(cuenta, `${type==='buy'?'Compra':'Venta'} ${sym}`);
+  operations.push({ id: Date.now(), type, sym, qty, price, date, notes, cuenta });
+  operations.sort((a,b) => a.date.localeCompare(b.date));
+  document.getElementById('opMsg').innerHTML = `<span class="green">✓</span> ${type==='buy'?'Compra':'Venta'} de ${fmt(qty,6)} ${sym} a ${fmtPrice(price)} USDT — ${cuenta === 'USDT' ? (type==='buy'?'Debitado de':'Abonado en') : (type==='buy'?'Debitado de':'Abonado en')} cuenta ${cuenta}.`;
+  document.getElementById('opQty').value = '';
+  document.getElementById('opPrice').value = '';
+  document.getElementById('opNotes').value = '';
+  renderOpsTable();
+  refreshAll();
+  scheduleSave();
+}
+
+function deleteOp(id) {
+  if (!confirm('¿Eliminar esta operación?')) return;
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+
+  // Revertir el efecto en el saldo USDT/EUR que se aplicó al crear la operación
+  if (op.cuenta) {
+    const total = op.qty * op.price;
+    if (op.type === 'buy') {
+      if (op.cuenta === 'USDT') saldoUSDT += total;
+      else saldoEUR += total;
+    } else {
+      if (op.cuenta === 'USDT') saldoUSDT -= total;
+      else saldoEUR -= total;
+    }
+    recordSaldo(op.cuenta, `Eliminada ${op.type==='buy'?'compra':'venta'} ${op.sym}`);
+  }
+
+  // Limpiar referencias huérfanas en casaciones (portfolioMatches)
+  if (op.type === 'sell') {
+    delete portfolioMatches[id];
+  } else {
+    Object.keys(portfolioMatches).forEach(sellId => {
+      portfolioMatches[sellId] = (portfolioMatches[sellId] || []).filter(l => l.buyId !== id);
+      if (!portfolioMatches[sellId].length) delete portfolioMatches[sellId];
+    });
+  }
+
+  // Limpiar referencias huérfanas en exclusiones (portfolioExcluded)
+  if (op.type === 'buy' && portfolioExcluded[op.sym]) {
+    portfolioExcluded[op.sym] = portfolioExcluded[op.sym].filter(bId => bId !== id);
+  }
+
+  // Limpiar resets que apuntaban a esta compra
+  if (op.type === 'buy' && portfolioResets[op.sym]) {
+    portfolioResets[op.sym] = portfolioResets[op.sym]
+      .map(r => {
+        const items = (r.items || []).filter(it => it.buyId !== id);
+        return { ...r, items, qty: items.reduce((s, it) => s + it.qty, 0) };
+      })
+      .filter(r => r.items.length);
+    if (!portfolioResets[op.sym].length) delete portfolioResets[op.sym];
+  }
+
+  operations = operations.filter(o => o.id !== id);
+  renderOpsTable();
+  refreshAll();
+  scheduleSave();
+}
+
+function editOpPrice(id) {
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+  const newPrice = prompt(`Nuevo precio (actual: ${op.price}):`, op.price);
+  if (newPrice === null) return;
+  const p = parseFloat(newPrice);
+  if (isNaN(p) || p <= 0) { alert('Precio no válido.'); return; }
+  op.price = p;
+  renderOpsTable();
+  refreshAll();
+  scheduleSave();
+}
+
+function editOpNotes(id, value) {
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+  op.notes = value.trim();
+  scheduleSave();
+  renderPortfolio();
+}
+
+function refreshAll() {
+  renderPortfolio();
+  populateSimSelect();
+  renderHistory();
+  renderLibro();
+}
+
+function updateFiltroSymOptions() {
+  const sel = document.getElementById('filtroSym');
+  if (!sel) return;
+  const cur = sel.value;
+  const symsUsed = [...new Set(operations.map(o => o.sym))].sort();
+  sel.innerHTML = '<option value="">Todos los pares</option>' + symsUsed.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+}
+
+function limpiarFiltros() {
+  document.getElementById('filtroTipo').value = '';
+  document.getElementById('filtroSym').value = '';
+  document.getElementById('filtroDesde').value = '';
+  document.getElementById('filtroHasta').value = '';
+  renderOpsTable();
+}
+
+function renderOpsTable() {
+  updateFiltroSymOptions();
+  const tbody = document.getElementById('opsTable');
+  if (!operations.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:1rem 0 0.5rem;">No hay operaciones registradas.</td></tr>';
+    const c = document.getElementById('filtroCount'); if(c) c.textContent = '';
+    return;
+  }
+  const filtroTipo = document.getElementById('filtroTipo')?.value || '';
+  const filtroSym = document.getElementById('filtroSym')?.value || '';
+  const filtroDesde = document.getElementById('filtroDesde')?.value || '';
+  const filtroHasta = document.getElementById('filtroHasta')?.value || '';
+  let filtered = operations.filter(o => {
+    if (filtroTipo && o.type !== filtroTipo) return false;
+    if (filtroSym && o.sym !== filtroSym) return false;
+    if (filtroDesde && o.date < filtroDesde) return false;
+    if (filtroHasta && o.date > filtroHasta) return false;
+    return true;
+  });
+  const countEl = document.getElementById('filtroCount');
+  if (countEl) countEl.textContent = filtered.length !== operations.length ? `${filtered.length} de ${operations.length} operaciones` : `${operations.length} operaciones`;
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:1rem 0 0.5rem;">No hay operaciones con esos filtros.</td></tr>';
+    return;
+  }
+  filtered = [...filtered].sort(byDateDesc);
+  tbody.innerHTML = filtered.map(o => `
+    <tr>
+      <td><span class="tag ${o.type==='buy'?'tag-buy':'tag-sell'}">${o.type==='buy'?'Compra':'Venta'}</span></td>
+      <td><span class="sym-badge">${o.sym}</span></td>
+      <td>${fmt(o.qty,6)}</td>
+      <td style="cursor:pointer;" onclick="editOpPrice(${o.id})" title="Click para editar">${fmtPrice(o.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
+      <td>${fmt(o.qty*o.price,2)} USDT</td>
+      <td>${o.date}</td>
+      <td style="min-width:140px;"><input type="text" value="${(o.notes||'').replace(/"/g,'&quot;')}" placeholder="—" style="width:100%;font-size:12px;background:transparent;border:none;border-bottom:1px solid var(--border);padding:2px 4px;" onchange="editOpNotes(${o.id},this.value)" /></td>
+      <td><button class="danger" onclick="deleteOp(${o.id})" style="height:28px;padding:0 8px;font-size:11px;"><i class="ti ti-trash"></i></button></td>
+    </tr>
+  `).join('');
+}
+
+// portfolioMatches: { sellId -> [ {buyId, qty}, ... ] }
+let portfolioMatches = {};
+// portfolioExcluded: { sym -> [buyId, ...] }
+let portfolioExcluded = {};
+
+function getPortfolio() {
+  const raw = {};
+  operations.forEach(o => {
+    if (!raw[o.sym]) raw[o.sym] = { buys: [], sells: [] };
+    if (o.type === 'buy') raw[o.sym].buys.push({...o});
+    else                  raw[o.sym].sells.push({...o});
+  });
+
+  const port = {};
+  Object.entries(raw).forEach(([sym, {buys, sells}]) => {
+    const buyMap = {};
+    buys.forEach(b => { buyMap[b.id] = {...b, saldadoQty: 0, saldadoBy: []}; });
+
+    sells.forEach(sell => {
+      const links = portfolioMatches[sell.id] || [];
+      links.forEach(link => {
+        if (buyMap[link.buyId]) {
+          buyMap[link.buyId].saldadoQty += link.qty;
+          buyMap[link.buyId].saldadoBy.push({sellId: sell.id, qty: link.qty});
+        }
+      });
+    });
+
+    const resetByBuy = {};
+    (portfolioResets[sym] || []).forEach(r => (r.items || []).forEach(it => {
+      resetByBuy[it.buyId] = (resetByBuy[it.buyId] || 0) + it.qty;
+    }));
+
+    const buyList = buys.map(b => {
+      const bm = buyMap[b.id];
+      bm.resetQty = resetByBuy[b.id] || 0;
+      bm.remaining = Math.max(0, bm.qty - bm.saldadoQty - bm.resetQty);
+      if (bm.remaining < 0.0000000001) bm.remaining = 0;
+      return bm;
+    });
+
+    let totalQty = 0, totalCost = 0;
+    buyList.forEach(b => {
+      const excluded = (portfolioExcluded[sym] || []).includes(b.id);
+      b.excluded = excluded;
+      if (!excluded) { totalQty += b.remaining; totalCost += b.remaining * b.price; }
+    });
+
+    port[sym] = { buys: buyList, sells, totalQty, totalCost, resets: portfolioResets[sym] || [] };
+  });
+  return port;
+}
+
+function toggleExcludeBuy(sym, buyId) {
+  if (!portfolioExcluded[sym]) portfolioExcluded[sym] = [];
+  const idx = portfolioExcluded[sym].indexOf(buyId);
+  if (idx >= 0) portfolioExcluded[sym].splice(idx, 1);
+  else portfolioExcluded[sym].push(buyId);
+  scheduleSave();
+  renderPortfolio();
+}
+
+// Track which symbols have detail expanded
+let portfolioExpanded = {};
+
+function togglePortfolioDetail(sym) {
+  portfolioExpanded[sym] = !portfolioExpanded[sym];
+  const el = document.getElementById('portdetail_' + sym);
+  const chk = document.getElementById('portchk_' + sym);
+  if (el) el.style.display = portfolioExpanded[sym] ? 'block' : 'none';
+  if (chk) chk.checked = !!portfolioExpanded[sym];
+}
+
+// Total qty of `buyId` already linked to sells OTHER than `excludeSellId`
+function getBuyLinkedQtyExcluding(buyId, excludeSellId) {
+  let total = 0;
+  Object.entries(portfolioMatches).forEach(([sId, links]) => {
+    if (Number(sId) === Number(excludeSellId)) return;
+    links.forEach(l => { if (l.buyId === buyId) total += l.qty; });
+  });
+  return total;
+}
+
+// Add or update a buy link for a sell — updates DOM directly, no full re-render
+function addBuyLink(sellId, sym) {
+  const selEl = document.getElementById('newlink_buy_' + sellId);
+  const qtyEl = document.getElementById('newlink_qty_' + sellId);
+  if (!selEl || !qtyEl) return;
+  const buyId = parseInt(selEl.value);
+  const qty   = parseFloat(qtyEl.value);
+  if (!buyId || isNaN(qty) || qty <= 0) { alert('Selecciona una compra e indica una cantidad válida.'); return; }
+
+  const buyOp = operations.find(o => o.id === buyId);
+  if (!buyOp) { alert('Esa compra ya no existe.'); return; }
+  const linkedElsewhere = getBuyLinkedQtyExcluding(buyId, sellId);
+  const resetQtyBuy = (portfolioResets[sym] || []).reduce((s, r) => s + (r.items || []).filter(it => it.buyId === buyId).reduce((a, it) => a + it.qty, 0), 0);
+  const available = buyOp.qty - linkedElsewhere - resetQtyBuy;
+  if (qty > available + 0.000001) {
+    alert(`Esta compra del ${buyOp.date} solo tiene ${fmt(available,6)} ${sym} libres (ya tiene ${fmt(linkedElsewhere,6)} asignados a otras ventas). No puedes asignar ${fmt(qty,6)}.`);
+    return;
+  }
+
+  if (!portfolioMatches[sellId]) portfolioMatches[sellId] = [];
+  const existing = portfolioMatches[sellId].find(l => l.buyId === buyId);
+  if (existing) { existing.qty = qty; }
+  else { portfolioMatches[sellId].push({buyId, qty}); }
+
+  casarSelectedBuy[sellId] = buyId;
+  scheduleSave();
+
+  // Refresh only the sell card DOM, not the whole portfolio
+  refreshSellCard(sellId, sym);
+}
+
+function refreshSellCard(sellId, sym) {
+  const port = getPortfolio();
+  const data = port[sym];
+  if (!data) return;
+  const sell = data.sells.find(s => s.id === sellId);
+  if (!sell) return;
+
+  const links     = portfolioMatches[sell.id] || [];
+  const linkedQty = links.reduce((s, l) => s + l.qty, 0);
+  const pending   = sell.qty - linkedQty;
+  const fullyCasada = pending < 0.000001;
+  const hasSome     = links.length > 0;
+
+  // Update badge
+  const badgeEl = document.getElementById('sell_badge_' + sellId);
+  if (badgeEl) {
+    let totalPnl = 0;
+    links.forEach(link => {
+      const buy = data.buys.find(b => b.id === link.buyId);
+      if (buy) totalPnl += (sell.price - buy.price) * link.qty;
+    });
+    const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+    const pnlTxt = hasSome ? `<span class="${pnlCls}" style="font-weight:600;margin-left:6px;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>` : '';
+    const badge  = fullyCasada
+      ? `<span class="badge-liquidado">Casada</span>`
+      : hasSome
+        ? `<span class="badge-parcial">Parcial · falta ${fmt(pending,6)}</span>`
+        : `<span class="badge-parcial">Sin casar</span>`;
+    badgeEl.innerHTML = badge + pnlTxt;
+  }
+
+  // Update linked buys list
+  const listEl = document.getElementById('sell_links_' + sellId);
+  if (listEl) {
+    let listHtml = '';
+    if (links.length) {
+      listHtml += `<div style="font-weight:600;margin-bottom:4px;color:#888;font-size:12px;">Compras asignadas:</div>`;
+      links.forEach(link => {
+        const buy = data.buys.find(b => b.id === link.buyId);
+        if (!buy) return;
+        const lPnl = (sell.price - buy.price) * link.qty;
+        const lCls = lPnl >= 0 ? 'green' : 'red';
+        listHtml += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;font-size:12px;">
+          <span style="color:#dc2626;">●</span>
+          <span>${buy.date} · ${fmt(link.qty,6)} ${sym} @ ${fmtPrice(buy.price)}</span>
+          <span class="${lCls}" style="font-weight:600;">${lPnl>=0?'+':''}${fmt(lPnl,2)} USDT</span>
+          <button style="height:20px;padding:0 7px;font-size:10px;color:#dc2626;border-color:#fecaca;" onclick="removeBuyLink(${sell.id},${link.buyId},'${sym}')">✕</button>
+        </div>`;
+      });
+    }
+    listEl.innerHTML = listHtml;
+  }
+
+  // Update counter
+  const counterEl = document.getElementById('sell_counter_' + sellId);
+  if (counterEl) {
+    counterEl.innerHTML = `Cubierto: <strong>${fmt(linkedQty,6)}</strong> / ${fmt(sell.qty,6)} · Pendiente: <strong style="color:${pending>0.000001?'#f59e0b':'#22c55e'}">${fmt(Math.max(0,pending),6)}</strong>`;
+  }
+
+  // Auto-fill qty for currently selected buy after adding
+  const selEl = document.getElementById('newlink_buy_' + sellId);
+  if (selEl) {
+    // Move to next unlinked buy if current is now fully linked
+    const currentBuyId = parseInt(selEl.value);
+    const currentBuy   = data.buys.find(b => b.id === currentBuyId);
+    const currentLinkedQty = links.find(l => l.buyId === currentBuyId)?.qty || 0;
+    if (currentBuy && currentBuy.qty - currentLinkedQty < 0.000001) {
+      // find next unlinked buy
+      const nextBuy = data.buys.find(b => {
+        const lq = links.find(l => l.buyId === b.id)?.qty || 0;
+        return b.qty - lq > 0.000001;
+      });
+      if (nextBuy) { selEl.value = nextBuy.id; casarSelectedBuy[sellId] = nextBuy.id; }
+    }
+    onNewLinkBuyChange(sellId, sym);
+  }
+}
+
+function removeBuyLink(sellId, buyId, sym) {
+  if (!portfolioMatches[sellId]) return;
+  portfolioMatches[sellId] = portfolioMatches[sellId].filter(l => l.buyId !== buyId);
+  scheduleSave();
+  // Full re-render needed to update buy tramos table
+  renderPortfolio();
+}
+
+function clearSellLinks(sellId) {
+  delete portfolioMatches[sellId];
+  delete casarSelectedBuy[sellId];
+  scheduleSave();
+  renderPortfolio();
+}
+
+function toggleCasarSelector(sellId) {
+  const box = document.getElementById('casar_' + sellId);
+  if (!box) return;
+  const opening = box.style.display === 'none';
+  box.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const selEl = document.getElementById('newlink_buy_' + sellId);
+    if (selEl) onNewLinkBuyChange(sellId, selEl.dataset.sym);
+  }
+}
+
+// Track which casar panels are open so renderPortfolio can restore them
+let casarOpen = {};
+// Track which buy was selected in each casar panel
+let casarSelectedBuy = {};
+
+function toggleCasarSelectorTracked(sellId) {
+  casarOpen[sellId] = !casarOpen[sellId];
+  const box = document.getElementById('casar_' + sellId);
+  if (!box) return;
+  box.style.display = casarOpen[sellId] ? 'block' : 'none';
+  if (casarOpen[sellId]) {
+    const selEl = document.getElementById('newlink_buy_' + sellId);
+    if (selEl) onNewLinkBuyChange(sellId, selEl.dataset.sym);
+  }
+}
+
+// When user picks a buy in the add-link selector, auto-fill with its free (remaining) qty
+function onNewLinkBuyChange(sellId, sym) {
+  const port = getPortfolio();
+  const data = port[sym];
+  if (!data) return;
+  const selEl = document.getElementById('newlink_buy_' + sellId);
+  const qtyEl = document.getElementById('newlink_qty_' + sellId);
+  if (!selEl || !qtyEl) return;
+  const buyId = parseInt(selEl.value);
+  casarSelectedBuy[sellId] = buyId;
+  const buy = data.buys.find(b => b.id === buyId);
+  if (!buy) return;
+  const links = portfolioMatches[sellId] || [];
+  const alreadyLinkedQty = links.find(l => l.buyId === buyId)?.qty || 0;
+  const freeQty = buy.remaining + alreadyLinkedQty;
+  // Propose the free (available) qty of this buy — user can edit if needed
+  qtyEl.value = fmt(freeQty, 6);
+}
+
+function renderWallet(totalUnrealized, totalRealized) {
+  const totalPnl = (totalUnrealized || 0) + (totalRealized || 0);
+  const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+  return `<div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Saldos de cuenta</div>
+    <div class="metric-grid">
+      <div class="metric clickable" onclick="openSaldoChart('USDT')" title="Pulsa para ver el gráfico del saldo">
+        <div class="metric-label">Cuenta USDT <i class="ti ti-chart-line" style="font-size:12px;"></i></div>
+        <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
+          <span>${fmt(saldoUSDT,2)} USDT</span>
+          <button onclick="event.stopPropagation();editSaldo('USDT')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+        </div>
+      </div>
+      <div class="metric clickable" onclick="openSaldoChart('EUR')" title="Pulsa para ver el gráfico del saldo">
+        <div class="metric-label">Cuenta EUR <i class="ti ti-chart-line" style="font-size:12px;"></i></div>
+        <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
+          <span>${fmt(saldoEUR,2)} EUR</span>
+          <button onclick="event.stopPropagation();editSaldo('EUR')" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">P&L Total (todas las cryptos)</div>
+        <div class="metric-value ${pnlCls}" style="font-size:16px;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</div>
+        <div class="small" style="color:#aaa;margin-top:2px;">No realizado: <span class="${totalUnrealized>=0?'green':'red'}">${totalUnrealized>=0?'+':''}${fmt(totalUnrealized,2)}</span> · Realizado: <span class="${totalRealized>=0?'green':'red'}">${totalRealized>=0?'+':''}${fmt(totalRealized,2)}</span></div>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function editSaldo(moneda) {
+  const cur = moneda === 'USDT' ? saldoUSDT : saldoEUR;
+  const val = prompt(`Saldo actual de la cuenta ${moneda}:`, cur.toFixed(2));
+  if (val === null) return;
+  const n = parseFloat(val);
+  if (isNaN(n)) return;
+  if (moneda === 'USDT') saldoUSDT = n;
+  else saldoEUR = n;
+  recordSaldo(moneda, 'Ajuste manual');
+  renderPortfolio();
+  scheduleSave();
+}
+
+/* ===== GRÁFICO DE SALDOS ===== */
+let saldoChartPts = [];
+
+function fmtFechaHora(t) {
+  return new Date(t).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function closeSaldoChart() {
+  document.getElementById('saldoModal').classList.remove('open');
+}
+
+function openSaldoChart(moneda) {
+  const h = [...((saldoHistory && saldoHistory[moneda]) || [])].sort((a, b) => a.t - b.t);
+  const cur = moneda === 'USDT' ? saldoUSDT : saldoEUR;
+  const W = 640, H = 260, L = 62, R = 14, T = 14, B = 30;
+  let chart = '<div class="muted small" style="padding:1rem 0;">Todavía no hay puntos registrados.</div>';
+  saldoChartPts = [];
+
+  if (h.length) {
+    const t0 = h[0].t;
+    let t1 = Math.max(Date.now(), h[h.length - 1].t);
+    if (t1 <= t0) t1 = t0 + 1;
+    let vMin = Math.min(...h.map(p => p.v)), vMax = Math.max(...h.map(p => p.v));
+    if (vMax - vMin < 0.01) { vMin -= 1; vMax += 1; }
+    const pad = (vMax - vMin) * 0.1; vMin -= pad; vMax += pad;
+    const X = t => L + (t - t0) / (t1 - t0) * (W - L - R);
+    const Y = v => T + (vMax - v) / (vMax - vMin) * (H - T - B);
+
+    let grid = '';
+    for (let i = 0; i <= 4; i++) {
+      const v = vMin + (vMax - vMin) * i / 4, y = Y(v);
+      grid += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="#eee" stroke-width="1"/>`
+            + `<text x="${L-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${fmt(v, 0)}</text>`;
+    }
+    let d = `M${X(h[0].t).toFixed(1)},${Y(h[0].v).toFixed(1)}`;
+    for (let i = 1; i < h.length; i++) d += ` H${X(h[i].t).toFixed(1)} V${Y(h[i].v).toFixed(1)}`;
+    d += ` H${X(t1).toFixed(1)}`;
+    const area = d + ` V${H-B} H${X(h[0].t).toFixed(1)} Z`;
+    const dots = h.map((p, i) => `<circle id="sdot_${i}" cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3.5" fill="#fff" stroke="#6366f1" stroke-width="2"/>`).join('');
+    const fDia = t => new Date(t).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
+
+    saldoChartPts = h.map(p => ({ ...p, x: X(p.t), y: Y(p.v) }));
+    chart = `<div class="saldo-chart-wrap" id="saldoChartWrap">
+      <svg viewBox="0 0 ${W} ${H}" id="saldoSvg" onpointermove="saldoChartHover(event,'${moneda}')" onpointerdown="saldoChartHover(event,'${moneda}')" onpointerleave="saldoChartLeave()">
+        ${grid}
+        <path d="${area}" fill="rgba(99,102,241,0.08)" stroke="none"/>
+        <path d="${d}" fill="none" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+        ${dots}
+        <text x="${L}" y="${H-8}" font-size="10" fill="#888">${fDia(t0)}</text>
+        <text x="${W-R}" y="${H-8}" font-size="10" fill="#888" text-anchor="end">hoy</text>
+      </svg>
+      <div class="saldo-tip" id="saldoTip"></div>
+    </div>`;
+  }
+
+  // Lista de movimientos: lo más reciente arriba
+  const rows = h.map((p, i) => ({ ...p, delta: i > 0 ? p.v - h[i-1].v : null })).reverse().map(p => {
+    const cls = p.delta === null ? 'muted' : (p.delta >= 0 ? 'green' : 'red');
+    return `<tr>
+      <td style="white-space:nowrap;">${fmtFechaHora(p.t)}</td>
+      <td>${p.m || '—'}</td>
+      <td class="${cls}" style="white-space:nowrap;">${p.delta === null ? '—' : (p.delta >= 0 ? '+' : '') + fmt(p.delta, 2)}</td>
+      <td style="white-space:nowrap;font-weight:500;">${fmt(p.v, 2)} ${moneda}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('saldoModalBox').innerHTML = `
+    <div class="modal-head">
+      <div>
+        <div class="card-title" style="margin-bottom:2px;">Evolución · Cuenta ${moneda}</div>
+        <div style="font-size:18px;font-weight:500;">${fmt(cur, 2)} ${moneda}</div>
+      </div>
+      <button onclick="closeSaldoChart()"><i class="ti ti-x"></i> Cerrar</button>
+    </div>
+    ${chart}
+    <div class="small muted" style="margin:6px 0 12px;">${h.length} punto(s) · se crea uno cada vez que cambia el saldo, por una operación o a mano.</div>
+    <div class="ovx" style="max-height:260px;overflow-y:auto;"><table>
+      <thead><tr><th>Fecha</th><th>Motivo</th><th>Cambio</th><th>Saldo</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="muted">Sin movimientos.</td></tr>'}</tbody>
+    </table></div>`;
+  document.getElementById('saldoModal').classList.add('open');
+}
+
+function saldoChartHover(ev, moneda) {
+  const svg = document.getElementById('saldoSvg'), tip = document.getElementById('saldoTip');
+  if (!svg || !tip || !saldoChartPts.length) return;
+  const rect = svg.getBoundingClientRect();
+  const scale = 640 / rect.width;
+  const x = (ev.clientX - rect.left) * scale;
+  let best = 0;
+  saldoChartPts.forEach((p, i) => { if (Math.abs(p.x - x) < Math.abs(saldoChartPts[best].x - x)) best = i; });
+  saldoChartPts.forEach((p, i) => {
+    const c = document.getElementById('sdot_' + i);
+    if (c) { c.setAttribute('r', i === best ? 5.5 : 3.5); c.setAttribute('fill', i === best ? '#6366f1' : '#fff'); }
+  });
+  const p = saldoChartPts[best];
+  tip.innerHTML = `${fmtFechaHora(p.t)}<br><strong>${fmt(p.v, 2)} ${moneda}</strong><br>${p.m || ''}`;
+  tip.style.display = 'block';
+  const px = p.x / scale, py = p.y / scale;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = px + 10; if (left + tw > rect.width) left = px - tw - 10; if (left < 0) left = 0;
+  let top = py - th - 8; if (top < 0) top = py + 10;
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+
+function saldoChartLeave() {
+  const tip = document.getElementById('saldoTip');
+  if (tip) tip.style.display = 'none';
+  saldoChartPts.forEach((p, i) => {
+    const c = document.getElementById('sdot_' + i);
+    if (c) { c.setAttribute('r', 3.5); c.setAttribute('fill', '#fff'); }
+  });
+}
+
+/* ===== RESET DE RESTOS ===== */
+// Pone a cero lo que quede de una cripto (restos por comisiones). No toca saldos,
+// casaciones ni P&L realizado: solo anota que ese resto ya no existe.
+function resetPosition(sym) {
+  const data = getPortfolio()[sym];
+  if (!data) return;
+  const items = data.buys.filter(b => !b.excluded && b.remaining > 0).map(b => ({ buyId: b.id, qty: b.remaining }));
+  const qty = items.reduce((s, it) => s + it.qty, 0);
+  if (!items.length || qty <= 0) { showToast('No queda nada que poner a cero en ' + sym); return; }
+  if (!confirm(`¿Poner a cero ${fmtQty(qty)} ${sym}?\n\nLa posición queda cerrada. No se tocan los saldos de cuenta ni el resultado.`)) return;
+  if (!portfolioResets[sym]) portfolioResets[sym] = [];
+  portfolioResets[sym].push({ id: Date.now(), date: todayISO(), qty, items });
+  refreshAll();
+  scheduleSave();
+  showToast(`✓ ${sym} puesto a cero`);
+}
+
+function undoReset(sym, resetId) {
+  if (!portfolioResets[sym]) return;
+  if (!confirm('¿Deshacer este reset? La cantidad vuelve a aparecer en el portfolio.')) return;
+  portfolioResets[sym] = portfolioResets[sym].filter(r => r.id !== resetId);
+  if (!portfolioResets[sym].length) delete portfolioResets[sym];
+  refreshAll();
+  scheduleSave();
+}
+
+// Detects data problems in portfolioMatches: orphaned links (pointing to
+// deleted operations) and buys linked with more quantity than they actually have.
+function checkPortfolioIntegrity() {
+  const issues = [];
+
+  Object.entries(portfolioMatches).forEach(([sellId, links]) => {
+    const sellOp = operations.find(o => o.id === Number(sellId));
+    if (!sellOp) {
+      issues.push(`Casación huérfana: la venta (id ${sellId}) ya no existe pero tiene ${links.length} enlace(s) guardados.`);
+      return;
+    }
+    links.forEach(link => {
+      const buyOp = operations.find(o => o.id === link.buyId);
+      if (!buyOp) issues.push(`Casación huérfana: una compra vinculada a la venta de ${sellOp.sym} del ${sellOp.date} ya no existe.`);
+    });
+  });
+
+  const linkedTotals = {};
+  Object.values(portfolioMatches).forEach(links => links.forEach(l => {
+    linkedTotals[l.buyId] = (linkedTotals[l.buyId] || 0) + l.qty;
+  }));
+  Object.entries(linkedTotals).forEach(([buyId, total]) => {
+    const buyOp = operations.find(o => o.id === Number(buyId));
+    if (buyOp && total > buyOp.qty + 0.000001) {
+      issues.push(`La compra de ${fmt(buyOp.qty,6)} ${buyOp.sym} del ${buyOp.date} tiene ${fmt(total,6)} ${buyOp.sym} casados en total — más de lo que compraste.`);
+    }
+  });
+
+  return issues;
+}
+
+function renderPortfolio() {
+  const port = getPortfolio();
+  let html = '';
+  let hasAny = false;
+  let totalUnrealizedPnl = 0;
+  let totalRealizedPnl = 0;
+  const integrityIssues = checkPortfolioIntegrity();
+
+  Object.entries(port).forEach(([sym, data]) => {
+    if (!data.buys.length && !data.sells.length) return;
+    hasAny = true;
+    const curPrice = prices[sym]?.price || 0;
+    const hasOpen  = data.totalQty > 0.000001;
+
+    // ── Card header ──────────────────────────────────────────────
+    // Calculate realized P&L from all casaciones for this symbol
+    let realizedPnl = 0;
+    data.sells.forEach(sell => {
+      const links = portfolioMatches[sell.id] || [];
+      links.forEach(link => {
+        const buy = data.buys.find(b => b.id === link.buyId);
+        if (buy) realizedPnl += (sell.price - buy.price) * link.qty;
+      });
+    });
+    const hasRealized = data.sells.some(s => (portfolioMatches[s.id] || []).length > 0);
+    totalRealizedPnl += realizedPnl;
+
+    if (hasOpen) {
+      const avgPrice = data.totalCost / data.totalQty;
+      const curValue = data.totalQty * curPrice;
+      const pnl      = curValue - data.totalCost;
+      const pnlPct   = data.totalCost > 0 ? (pnl / data.totalCost) * 100 : 0;
+      totalUnrealizedPnl += pnl;
+      const cls      = pnl >= 0 ? 'green' : 'red';
+      const rCls     = realizedPnl >= 0 ? 'green' : 'red';
+      const uncasadaQty = data.buys.filter(b => !b.excluded).reduce((s,b) => s + b.remaining, 0);
+      const isExpanded  = !!portfolioExpanded[sym];
+      html += `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;margin:0;" title="Ver tramos y ventas">
+              <input id="portchk_${sym}" type="checkbox" ${isExpanded?'checked':''} onchange="togglePortfolioDetail('${sym}')" style="width:15px;height:15px;cursor:pointer;">
+            </label>
+            <span style="font-size:17px;font-weight:500;">${sym}</span>
+            <span class="sym-badge">${fmt(data.totalQty,6)} ${sym}</span>
+            <button onclick="resetPosition('${sym}')" title="Poner a cero el resto que queda (comisiones) sin tocar nada más" style="height:24px;padding:0 9px;font-size:11px;"><i class="ti ti-eraser"></i> Reset</button>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:17px;font-weight:500;">${fmt(curValue,2)} USDT</div>
+            <div class="small ${cls}">${pnl>=0?'+':''}${fmt(pnl,2)} USDT (${pnl>=0?'+':''}${fmt(pnlPct,2)}%)</div>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><div class="metric-label">Precio actual</div><div class="metric-value" style="font-size:14px;">${curPrice?fmtPrice(curPrice):'—'}</div></div>
+          <div class="metric"><div class="metric-label">Precio medio ponderado</div><div class="metric-value" style="font-size:14px;">${fmtPrice(avgPrice)}</div></div>
+          <div class="metric"><div class="metric-label">Total sin casar</div><div class="metric-value" style="font-size:14px;">${fmt(uncasadaQty,6)} ${sym}</div></div>
+          <div class="metric"><div class="metric-label">Coste abierto</div><div class="metric-value" style="font-size:14px;">${fmt(data.totalCost,2)}</div></div>
+          <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${cls}" style="font-size:14px;">${pnl>=0?'+':''}${fmt(pnl,2)}</div></div>
+          ${hasRealized?`<div class="metric"><div class="metric-label">P&L realizado</div><div class="metric-value ${rCls}" style="font-size:14px;">${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)}</div></div>`:''}
+          ${hasRealized?`<div class="metric"><div class="metric-label">P&L total</div><div class="metric-value ${(pnl+realizedPnl)>=0?'green':'red'}" style="font-size:14px;font-weight:600;">${(pnl+realizedPnl)>=0?'+':''}${fmt(pnl+realizedPnl,2)}</div></div>`:''}
+        </div>
+        <div id="portdetail_${sym}" style="display:${isExpanded?'block':'none'};">`;
+    } else {
+      const rCls = realizedPnl >= 0 ? 'green' : 'red';
+      const isExpanded = !!portfolioExpanded[sym];
+      html += `<div class="card" style="border-color:#fecaca;background:#fffafa;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;margin:0;" title="Ver tramos y ventas">
+              <input id="portchk_${sym}" type="checkbox" ${isExpanded?'checked':''} onchange="togglePortfolioDetail('${sym}')" style="width:15px;height:15px;cursor:pointer;">
+            </label>
+            <span style="font-size:17px;font-weight:500;color:#dc2626;">${sym}</span>
+            <span class="badge-liquidado" style="font-size:12px;">POSICIÓN CERRADA</span>
+          </div>
+          ${hasRealized?`<div style="text-align:right;"><div class="small ${rCls}" style="font-size:14px;font-weight:600;">P&L realizado: ${realizedPnl>=0?'+':''}${fmt(realizedPnl,2)} USDT</div></div>`:''}
+        </div>
+        <div id="portdetail_${sym}" style="display:${isExpanded?'block':'none'};">`;
+    }
+
+    // ── Tramos de compra ─────────────────────────────────────────
+    if (data.buys.length) {
+      html += `<div class="card-title" style="margin-top:4px;">Tramos de compra</div>
+        <div class="ovx"><table>
+          <thead><tr><th style="width:30px;">✓</th><th>Fecha</th><th>Cantidad</th><th>Precio compra</th><th>Coste</th><th>Estado / P&L</th><th>Notas</th></tr></thead>
+          <tbody>`;
+
+      [...data.buys].sort(byDateDesc).forEach(b => {
+        const hasReset  = b.resetQty > 0;
+        const isLiq     = b.remaining < 0.000001 && (b.saldadoQty > 0.000001 || hasReset);
+        const isParcial = !isLiq && (b.saldadoQty > 0.000001 || hasReset);
+        const resetBadge = hasReset ? `<span class="badge-reset">Reset ${fmtQty(b.resetQty)}</span>` : '';
+        const isExcl    = b.excluded;
+        const rowStyle  = isExcl ? 'opacity:0.45;' : '';
+        const chk       = `<input type="checkbox" ${!isExcl?'checked':''} onchange="toggleExcludeBuy('${sym}',${b.id})" style="cursor:pointer;">`;
+
+        if (isLiq) {
+          let totalPnl = 0;
+          b.saldadoBy.forEach(link => {
+            const sell = data.sells.find(s => s.id === link.sellId);
+            if (sell) totalPnl += (sell.price - b.price) * link.qty;
+          });
+          const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+          const sellDates = b.saldadoBy.map(link => {
+            const s = data.sells.find(s => s.id === link.sellId);
+            return s ? s.date : '';
+          }).filter(Boolean).join(', ');
+          html += `<tr style="background:#fff5f5;${rowStyle}">
+            <td>${chk}</td>
+            <td style="color:#dc2626;text-decoration:line-through;">${b.date}</td>
+            <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty,6)}</td>
+            <td style="color:#dc2626;text-decoration:line-through;">${fmtPrice(b.price)}</td>
+            <td style="color:#dc2626;text-decoration:line-through;">${fmt(b.qty*b.price,2)} USDT</td>
+            <td>${b.saldadoQty > 0.000001 ? `<span class="badge-liquidado">Liquidado</span> <span class="${pnlCls}" style="font-weight:600;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>` : ''}${resetBadge}${sellDates?' <span style="color:#aaa;font-size:11px;">· '+sellDates+'</span>':''}</td>
+            <td style="color:#aaa;font-size:12px;">${b.notes||'—'}</td>
+          </tr>`;
+        } else if (isParcial) {
+          const tp = curPrice ? (curPrice - b.price) * b.remaining : null;
+          const tc = tp !== null ? (tp>=0?'green':'red') : '';
+          html += `<tr style="${rowStyle}">
+            <td>${chk}</td>
+            <td>${b.date}</td>
+            <td>${fmt(b.remaining,6)} <span style="color:#aaa;font-size:11px;">(de ${fmt(b.qty,6)})</span></td>
+            <td style="cursor:pointer;" onclick="editOpPrice(${b.id})" title="Click para editar">${fmtPrice(b.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
+            <td>${fmt(b.remaining*b.price,2)} USDT</td>
+            <td><span class="badge-parcial">Parcial</span>${resetBadge} <span class="${tc}">${tp!==null?(tp>=0?'+':'')+fmt(tp,2)+' USDT':'—'}</span></td>
+            <td style="font-size:12px;color:#888;">${b.notes||'—'}</td>
+          </tr>`;
+        } else {
+          const tp = curPrice ? (curPrice - b.price) * b.qty : null;
+          const tc = tp !== null ? (tp>=0?'green':'red') : '';
+          html += `<tr style="${rowStyle}">
+            <td>${chk}</td>
+            <td>${b.date}</td>
+            <td>${fmt(b.qty,6)}</td>
+            <td style="cursor:pointer;" onclick="editOpPrice(${b.id})" title="Click para editar">${fmtPrice(b.price)} <i class="ti ti-pencil" style="font-size:10px;color:#aaa"></i></td>
+            <td>${fmt(b.qty*b.price,2)} USDT</td>
+            <td class="${tc}">${tp!==null?(tp>=0?'+':'')+fmt(tp,2)+' USDT':'—'}</td>
+            <td style="font-size:12px;color:#888;">${b.notes||'—'}</td>
+          </tr>`;
+        }
+      });
+      html += `</tbody></table></div>`;
+    }
+
+    // ── Ventas ───────────────────────────────────────────────────
+    if (data.sells.length) {
+      html += `<div class="card-title" style="margin-top:14px;">Ventas</div>`;
+
+      [...data.sells].sort(byDateDesc).forEach(sell => {
+        const links       = portfolioMatches[sell.id] || [];
+        const linkedQty   = links.reduce((s, l) => s + l.qty, 0);
+        const pending     = sell.qty - linkedQty;
+        const fullyCasada = pending < 0.000001;
+        const hasSome     = links.length > 0;
+
+        // P&L total de esta venta
+        let totalPnl = 0;
+        links.forEach(link => {
+          const buy = data.buys.find(b => b.id === link.buyId);
+          if (buy) totalPnl += (sell.price - buy.price) * link.qty;
+        });
+
+        const estadoBadge = fullyCasada
+          ? `<span class="badge-liquidado">Casada</span>`
+          : hasSome
+            ? `<span class="badge-parcial">Parcial · falta ${fmt(pending,6)}</span>`
+            : `<span class="badge-parcial">Sin casar</span>`;
+
+        const pnlCls = totalPnl >= 0 ? 'green' : 'red';
+        const pnlTxt = hasSome ? `<span class="${pnlCls}" style="font-weight:600;margin-left:6px;">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</span>` : '';
+
+        html += `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div style="font-size:13px;">
+              <strong>${sell.date}</strong> · ${fmt(sell.qty,6)} ${sym} · ${fmtPrice(sell.price)} USDT
+              · Total: <strong>${fmt(sell.qty*sell.price,2)} USDT</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span id="sell_badge_${sell.id}">${estadoBadge}${pnlTxt}</span>
+              <button style="height:26px;padding:0 10px;font-size:11px;" onclick="toggleCasarSelectorTracked(${sell.id})">
+                <i class="ti ti-link"></i> ${hasSome?'Editar':'Casar'}
+              </button>
+              ${hasSome?`<button class="danger" style="height:26px;padding:0 10px;font-size:11px;" onclick="clearSellLinks(${sell.id})">Limpiar</button>`:''}
+            </div>
+          </div>`;
+
+        // Linked buys list
+        html += `<div id="sell_links_${sell.id}" style="margin-top:${links.length?'8px':'0'};">`;
+        if (links.length) {
+          html += `<div style="font-weight:600;margin-bottom:4px;color:#888;font-size:12px;">Compras asignadas:</div>`;
+          links.forEach(link => {
+            const buy = data.buys.find(b => b.id === link.buyId);
+            if (!buy) return;
+            const lPnl = (sell.price - buy.price) * link.qty;
+            const lCls = lPnl >= 0 ? 'green' : 'red';
+            html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;font-size:12px;">
+              <span style="color:#dc2626;">●</span>
+              <span>${buy.date} · ${fmt(link.qty,6)} ${sym} @ ${fmtPrice(buy.price)}</span>
+              <span class="${lCls}" style="font-weight:600;">${lPnl>=0?'+':''}${fmt(lPnl,2)} USDT</span>
+              <button style="height:20px;padding:0 7px;font-size:10px;color:#dc2626;border-color:#fecaca;" onclick="removeBuyLink(${sell.id},${link.buyId},'${sym}')">✕</button>
+            </div>`;
+          });
+        }
+        html += `</div>`;
+
+        // Add new link selector — shown inside toggleable box
+        const availBuys = data.buys.filter(b => {
+          if (b.id === undefined) return false;
+          const alreadyLinkedQty = links.find(l => l.buyId === b.id)?.qty || 0;
+          const freeQty = b.remaining + alreadyLinkedQty;
+          return freeQty > 0.000001;
+        });
+        const opts = availBuys.map(b => {
+          const alreadyLinkedQty = links.find(l => l.buyId === b.id)?.qty || 0;
+          const freeQty = b.remaining + alreadyLinkedQty;
+          return `<option value="${b.id}">${b.date} · ${fmt(b.qty,6)} ${sym} · ${fmtPrice(b.price)} · libre: ${fmt(freeQty,6)}</option>`;
+        }).join('');
+
+        // Propose qty = free (available) qty of first available buy
+        const firstBuy = availBuys[0];
+        const firstFreeQty = firstBuy ? (firstBuy.remaining + (links.find(l => l.buyId === firstBuy.id)?.qty || 0)) : 0;
+        const proposed = firstBuy ? fmt(firstFreeQty, 6) : '0';
+
+        html += `<div id="casar_${sell.id}" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;">Añadir compra asignada</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <select id="newlink_buy_${sell.id}" data-sym="${sym}" data-sellid="${sell.id}" style="flex:2;min-width:220px;font-size:12px;" onchange="onNewLinkBuyChange(${sell.id},'${sym}')">${opts}</select>
+            <input id="newlink_qty_${sell.id}" type="number" step="any" value="${proposed}" style="width:110px;font-size:12px;" placeholder="Cantidad">
+            <button class="primary" style="height:30px;padding:0 12px;font-size:12px;" onclick="addBuyLink(${sell.id},'${sym}')">Añadir</button>
+          </div>
+          <div id="sell_counter_${sell.id}" style="font-size:11px;color:#aaa;margin-top:6px;">
+            Cubierto: <strong>${fmt(linkedQty,6)}</strong> / ${fmt(sell.qty,6)} · Pendiente: <strong style="color:${pending>0.000001?'#f59e0b':'#22c55e'}">${fmt(Math.max(0,pending),6)}</strong>
+          </div>
+        </div>`;
+
+        html += `</div>`;
+      });
+    }
+
+    // ── Resets (restos puestos a cero) ───────────────────────────
+    if (data.resets && data.resets.length) {
+      html += `<div class="card-title" style="margin-top:14px;">Resets</div>`;
+      [...data.resets].sort(byDateDesc).forEach(r => {
+        html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:4px;">
+          <span class="badge-reset" style="margin-left:0;">Reset</span>
+          <span><strong>${r.date}</strong> · ${fmtQty(r.qty)} ${sym} puesto a cero (resto por comisiones)</span>
+          <button style="height:20px;padding:0 7px;font-size:10px;" onclick="undoReset('${sym}',${r.id})">Deshacer</button>
+        </div>`;
+      });
+    }
+
+    html += `</div></div>`; // close portdetail + card
+  });
+
+  const integrityHtml = integrityIssues.length
+    ? `<div class="card" style="margin-bottom:16px;border:1px solid #f59e0b;background:rgba(245,158,11,0.08);">
+        <div class="card-title" style="color:#f59e0b;"><i class="ti ti-alert-triangle"></i> Se han detectado ${integrityIssues.length} incidencia(s) en las casaciones</div>
+        <ul style="margin:6px 0 0 18px;padding:0;font-size:12px;color:#b45309;">
+          ${integrityIssues.map(i => `<li style="margin-bottom:4px;">${i}</li>`).join('')}
+        </ul>
+      </div>`
+    : '';
+
+  document.getElementById('portfolioContent').innerHTML = renderWallet(totalUnrealizedPnl, totalRealizedPnl) + integrityHtml + (hasAny
+    ? html
+    : '<div class="card muted">No tienes posiciones. Añade operaciones de compra en la pestaña Operaciones.</div>');
+
+  // Restore open casar panels and trigger auto-fill
+  Object.keys(casarOpen).forEach(sid => {
+    if (casarOpen[sid]) {
+      const box = document.getElementById('casar_' + sid);
+      if (box) {
+        box.style.display = 'block';
+        const selEl = document.getElementById('newlink_buy_' + sid);
+        if (selEl) {
+          // Restore previously selected buy if still available
+          const savedBuyId = casarSelectedBuy[sid];
+          if (savedBuyId) {
+            const opt = selEl.querySelector(`option[value="${savedBuyId}"]`);
+            if (opt) selEl.value = savedBuyId;
+          }
+          onNewLinkBuyChange(parseInt(sid), selEl.dataset.sym);
+        }
+      }
+    }
+  });
+}
+
+
+function updateSimQty() {
+  const sym = document.getElementById('simSym').value;
+  const port = getPortfolio();
+  const data = port[sym];
+  if (data && data.totalQty > 0.000001) {
+    document.getElementById('simQty').value = data.totalQty.toFixed(6);
+  } else {
+    document.getElementById('simQty').value = '';
+  }
+}
+
+function populateSimSelect() {
+  const port = getPortfolio();
+  const active = Object.entries(port).filter(([s,d]) => d.totalQty > 0.000001);
+  const sel = document.getElementById('simSym');
+  const cur = sel.value;
+  sel.innerHTML = active.length
+    ? active.map(([s]) => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('')
+    : '<option>Sin posiciones</option>';
+  updateSimQty();
+}
+
+function runSim() {
+  const sym = document.getElementById('simSym').value;
+  const sellPrice = parseFloat(document.getElementById('simPrice').value);
+  const port = getPortfolio();
+  const data = port[sym];
+  if (!data || data.totalQty < 0.000001) { document.getElementById('simResult').innerHTML = '<div class="muted small" style="margin-top:10px;">No tienes posición en este activo.</div>'; return; }
+  if (isNaN(sellPrice) || sellPrice <= 0) { document.getElementById('simResult').innerHTML = '<div class="muted small" style="margin-top:10px;">Introduce un precio de venta válido.</div>'; return; }
+  let qtyToSell = parseFloat(document.getElementById('simQty').value);
+  if (isNaN(qtyToSell) || qtyToSell <= 0) qtyToSell = data.totalQty;
+  const ratio = qtyToSell / data.totalQty;
+  const avgCost = data.totalCost / data.totalQty;
+  const costBasis = qtyToSell * avgCost;
+  const saleValue = qtyToSell * sellPrice;
+  const pnl = saleValue - costBasis;
+  const pnlPct = (pnl / costBasis) * 100;
+  const cls = pnl >= 0 ? 'green' : 'red';
+  const tramoRows = [...data.buys].sort(byDateDesc).map(b => {
+    const qty = b.qty * ratio;
+    const cost = qty * b.price;
+    const val = qty * sellPrice;
+    const tp = val - cost;
+    const tc = tp >= 0 ? 'green' : 'red';
+    return `<tr>
+      <td>${b.date}</td><td>${fmt(qty,6)} ${sym}</td>
+      <td>${fmtPrice(b.price)}</td><td>${fmt(cost,2)} USDT</td>
+      <td>${fmt(val,2)} USDT</td>
+      <td class="${tc}">${tp>=0?'+':''}${fmt(tp,2)} USDT</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('simResult').innerHTML = `
+    <div class="sim-result-box">
+      <div class="sim-row"><span>Cantidad a vender</span><span>${fmt(qtyToSell,6)} ${sym}</span></div>
+      <div class="sim-row"><span>Precio de venta</span><span>${fmtPrice(sellPrice)} USDT</span></div>
+      <div class="sim-row"><span>Valor de venta</span><span>${fmt(saleValue,2)} USDT</span></div>
+      <div class="sim-row"><span>Coste ponderado</span><span>${fmtPrice(avgCost)} USDT</span></div>
+      <div class="sim-row"><span>Coste base</span><span>${fmt(costBasis,2)} USDT</span></div>
+      <div class="sim-row"><span class="${cls}">P&L total</span><span class="${cls}">${pnl>=0?'+':''}${fmt(pnl,2)} USDT (${pnl>=0?'+':''}${fmt(pnlPct,2)}%)</span></div>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">Desglose por tramo de compra</div>
+      <div class="ovx"><table>
+        <thead><tr><th>Fecha compra</th><th>Qty proporcional</th><th>Precio compra</th><th>Coste</th><th>Ingreso</th><th>P&L</th></tr></thead>
+        <tbody>${tramoRows}</tbody>
+      </table></div>
+    </div>
+    <div style="text-align:right;margin-top:12px;">
+      <button class="success" onclick="confirmSell('${sym}',${qtyToSell},${sellPrice},${pnl},${costBasis})"><i class="ti ti-check"></i> Registrar esta venta</button>
+    </div>`;
+}
+
+function confirmSell(sym, qty, price, pnl, costBasis) {
+  const today = new Date().toISOString().slice(0,10);
+  operations.push({ id: Date.now(), type:'sell', sym, qty, price, date: today });
+  operations.sort((a,b) => a.date.localeCompare(b.date));
+  renderOpsTable();
+  refreshAll();
+  document.getElementById('simResult').innerHTML = '<div class="small green" style="margin-top:10px;"><i class="ti ti-check"></i> Venta registrada. Puedes verla en Historial.</div>';
+  scheduleSave();
+}
+
+// Builds the sales history directly from `operations`, using real casaciones
+// (portfolioMatches) where they exist, and falling back to FIFO against the
+// remaining (uncasado) buy pool for any part of a sell that isn't casada.
+function buildHistoryFromOperations() {
+  const port = getPortfolio();
+  const history = [];
+
+  Object.entries(port).forEach(([sym, data]) => {
+    if (!data.sells.length) return;
+
+    // Pool of buys available for FIFO fallback = what's left uncasado today
+    const poolBuys = data.buys
+      .filter(b => !b.excluded)
+      .map(b => ({ id: b.id, date: b.date, price: b.price, avail: b.remaining }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const sellsSorted = [...data.sells].sort((a, b) => a.date.localeCompare(b.date));
+
+    sellsSorted.forEach(sell => {
+      const links = portfolioMatches[sell.id] || [];
+      let matchedQty = 0, matchedCost = 0;
+      links.forEach(link => {
+        const buy = data.buys.find(b => b.id === link.buyId);
+        if (buy) { matchedQty += link.qty; matchedCost += link.qty * buy.price; }
+      });
+
+      let uncoveredQty = Math.max(0, sell.qty - matchedQty);
+      let uncoveredCost = 0;
+      for (const pb of poolBuys) {
+        if (uncoveredQty <= 0.000001) break;
+        if (pb.avail <= 0.000001) continue;
+        const take = Math.min(pb.avail, uncoveredQty);
+        uncoveredCost += take * pb.price;
+        pb.avail -= take;
+        uncoveredQty -= take;
+      }
+
+      const costBasis = matchedCost + uncoveredCost;
+      const pnl = sell.qty * sell.price - costBasis;
+      history.push({ sym, qty: sell.qty, price: sell.price, costBasis, pnl, date: sell.date, id: sell.id });
+    });
+  });
+
+  history.sort(byDateDesc);
+  return history;
+}
+
+function renderHistory() {
+  const tbody = document.getElementById('histTable');
+  const empty = document.getElementById('histEmpty');
+  const history = buildHistoryFromOperations();
+  if (!history.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  let totalPnl = 0;
+  tbody.innerHTML = history.map(h => {
+    totalPnl += h.pnl;
+    const cls = h.pnl >= 0 ? 'green' : 'red';
+    const pct = h.costBasis > 0 ? (h.pnl / h.costBasis * 100) : 0;
+    return `<tr>
+      <td><span class="sym-badge">${h.sym}</span></td>
+      <td>${fmt(h.qty,6)}</td>
+      <td>${fmtPrice(h.price)} USDT</td>
+      <td>${fmt(h.costBasis,2)} USDT</td>
+      <td class="${cls}">${h.pnl>=0?'+':''}${fmt(h.pnl,2)} USDT</td>
+      <td class="${cls}">${h.pnl>=0?'+':''}${fmt(pct,2)}%</td>
+      <td>${h.date}</td>
+    </tr>`;
+  }).join('');
+  const totCls = totalPnl >= 0 ? 'green' : 'red';
+  tbody.innerHTML += `<tr style="font-weight:500;border-top:2px solid #e5e7eb;">
+    <td colspan="4">Total P&L realizado</td>
+    <td class="${totCls}" colspan="3">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} USDT</td>
+  </tr>`;
+}
+
+/* === GOOGLE DRIVE === */
+function handleDriveAuth() {
+  if (accessToken) {
+    if (confirm('¿Desconectar Google Drive?')) {
+      accessToken = null; driveFileId = null;
+      document.getElementById('driveBtn').className = 'drive-btn';
+      document.getElementById('driveBtnText').textContent = 'Conectar Drive';
+      showToast('Drive desconectado');
+      updateSyncBar();
+    }
+    return;
+  }
+  if (!window.google) { showToast('Google aún cargando, espera un momento...'); setTimeout(handleDriveAuth, 1500); return; }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('Error al conectar: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      document.getElementById('driveBtn').className = 'drive-btn connected';
+      document.getElementById('driveBtnText').textContent = 'Drive conectado';
+      showToast('✓ Google Drive conectado — cargando datos...');
+      await loadFromDrive();
+    }
+  });
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
+async function findOrCreateFolder() {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id)`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const data = await res.json();
+  if (data.files && data.files.length > 0) return data.files[0].id;
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  const folder = await create.json();
+  return folder.id;
+}
+
+async function findOrCreateFile() {
+  const folderId = await findOrCreateFolder();
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}' and '${folderId}' in parents and trashed=false&fields=files(id)`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const data = await res.json();
+  if (data.files && data.files.length > 0) { driveFileId = data.files[0].id; return driveFileId; }
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: DRIVE_FILE_NAME, parents: [folderId] })
+  });
+  const created = await create.json();
+  driveFileId = created.id;
+  return driveFileId;
+}
+
+async function loadFromDrive() {
+  if (!accessToken) return;
+  try {
+    const fileId = await findOrCreateFile();
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (res.status === 200) {
+      const text = await res.text();
+      if (text && text.trim().startsWith('{')) {
+        const d = JSON.parse(text);
+        if (d.operations) operations = d.operations;
+        if (d.saleHistory) saleHistory = d.saleHistory;
+        if (d.symbols) symbols = d.symbols;
+        if (d.lastSaved) lastSaved = d.lastSaved;
+        if (d.futuresOps) futuresOps = d.futuresOps;
+        if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
+      if (d.saldoUSDT !== undefined) saldoUSDT = d.saldoUSDT;
+      if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
+        if (d.saldoUSDT !== undefined) saldoUSDT = d.saldoUSDT;
+        if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
+        if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
+        if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
+        if (d.saldoHistory) saldoHistory = d.saldoHistory;
+        if (d.portfolioResets) portfolioResets = d.portfolioResets;
+        ensureSaldoBaseline();
+        renderOpsTable(); populateSymSelects(); renderSymChips(); fetchPrices();
+        refreshAll();
+        showToast('✓ Datos cargados desde Drive');
+        updateSyncBar();
+      } else {
+        showToast('Drive conectado — carpeta CryptoTracker creada en tu Drive');
+      }
+    }
+  } catch(e) { showToast('Error al leer Drive'); }
+}
+
+async function saveToDrive() {
+  if (!accessToken) { saveToLocal(); return; }
+  try {
+    const btn = document.getElementById('driveBtn');
+    btn.className = 'drive-btn saving';
+    document.getElementById('driveBtnText').textContent = 'Guardando...';
+    const fileId = driveFileId || await findOrCreateFile();
+    lastSaved = new Date().toLocaleTimeString('es-ES');
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR, saldoHistory, portfolioResets })
+    });
+    saveToLocal();
+    btn.className = 'drive-btn connected';
+    document.getElementById('driveBtnText').textContent = 'Drive conectado';
+    updateSyncBar();
+    showToast('✓ Guardado en Drive: ' + lastSaved);
+  } catch(e) {
+    showToast('Error al guardar en Drive');
+    saveToLocal();
+    document.getElementById('driveBtn').className = 'drive-btn connected';
+    document.getElementById('driveBtnText').textContent = 'Drive conectado';
+  }
+}
+
+function saveToLocal() {
+  try { localStorage.setItem('crypto_tracker_v2', JSON.stringify({ operations, saleHistory, symbols, lastSaved, futuresOps, futuresSaldo, portfolioMatches, portfolioExcluded, saldoUSDT, saldoEUR, saldoHistory, portfolioResets })); } catch(e) {}
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveToDrive(), 1500);
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('crypto_tracker_v2');
+    if (saved) {
+      const d = JSON.parse(saved);
+      if (d.operations) operations = d.operations;
+      if (d.saleHistory) saleHistory = d.saleHistory;
+      if (d.symbols) symbols = d.symbols;
+      if (d.lastSaved) lastSaved = d.lastSaved;
+      if (d.futuresOps) futuresOps = d.futuresOps;
+      if (d.futuresSaldo !== undefined) futuresSaldo = d.futuresSaldo;
+      if (d.saldoUSDT !== undefined) saldoUSDT = d.saldoUSDT;
+      if (d.saldoEUR !== undefined) saldoEUR = d.saldoEUR;
+      if (d.portfolioMatches) portfolioMatches = d.portfolioMatches;
+      if (d.portfolioExcluded) portfolioExcluded = d.portfolioExcluded;
+      if (d.saldoHistory) saldoHistory = d.saldoHistory;
+      if (d.portfolioResets) portfolioResets = d.portfolioResets;
+    }
+  } catch(e) {}
+  ensureSaldoBaseline();
+  saveToLocal();
+}
+
+
+function toggleLibroOp(id) {
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+  op.excluded = !op.excluded;
+  renderLibro();
+  scheduleSave();
+}
+
+function renderLibro() {
+  const syms = [...new Set(operations.map(o => o.sym))];
+  if (!syms.length) {
+    document.getElementById('libroContent').innerHTML = '<div class="card muted">No hay operaciones registradas.</div>';
+    return;
+  }
+  let html = '';
+  syms.forEach(sym => {
+    const ops = operations.filter(o => o.sym === sym).sort((a,b) => a.date.localeCompare(b.date));
+    let saldo = 0;
+    let totalDebe = 0;
+    let totalHaber = 0;
+    const rows = ops.map(o => {
+      const total = o.qty * o.price;
+      const excluded = o.excluded || false;
+      let debe = null, haber = null;
+      if (!excluded) {
+        if (o.type === 'buy') { debe = total; saldo -= total; totalDebe += total; }
+        else { haber = total; saldo += total; totalHaber += total; }
+      }
+      const saldoClass = saldo >= 0 ? 'saldo-pos' : 'saldo-neg';
+      const exClass = excluded ? 'excluded' : '';
+      const checked = excluded ? '' : 'checked';
+      const saldoCell = excluded ? '—' : (saldo >= 0 ? '+' : '') + fmt(saldo, 2) + ' USDT';
+      return '<tr class="' + exClass + '">'
+        + '<td><label class="libro-toggle"><input type="checkbox" ' + checked + ' onchange="toggleLibroOp(' + o.id + ')"> Incluir</label></td>'
+        + '<td>' + o.date + '</td>'
+        + '<td><span class="tag ' + (o.type === 'buy' ? 'tag-buy' : 'tag-sell') + '">' + (o.type === 'buy' ? 'Compra' : 'Venta') + '</span></td>'
+        + '<td>' + fmt(o.qty, 6) + ' ' + sym + '</td>'
+        + '<td>' + fmtPrice(o.price) + ' USDT</td>'
+        + '<td class="debe">' + (debe !== null ? fmt(debe, 2) + ' USDT' : '—') + '</td>'
+        + '<td class="haber">' + (haber !== null ? fmt(haber, 2) + ' USDT' : '—') + '</td>'
+        + '<td class="' + (excluded ? '' : saldoClass) + '">' + saldoCell + '</td>'
+        + '</tr>';
+    }).reverse().join(''); // el saldo se acumula de antiguo a nuevo; se muestra lo más reciente arriba
+    const resultado = totalHaber - totalDebe;
+    const resClass = resultado >= 0 ? 'saldo-pos' : 'saldo-neg';
+    html += '<div class="card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+      + '<span style="font-size:16px;font-weight:500;">' + sym + '</span>'
+      + '<span class="small muted">' + ops.length + ' operaciones &nbsp;|&nbsp; Resultado: <span class="' + resClass + '">' + (resultado >= 0 ? '+' : '') + fmt(resultado, 2) + ' USDT</span></span>'
+      + '</div>'
+      + '<div class="ovx"><table class="libro-table">'
+      + '<thead><tr>'
+      + '<th style="width:80px;">Incluir</th>'
+      + '<th>Fecha</th><th>Tipo</th><th>Cantidad</th><th>Precio</th>'
+      + '<th class="col-debe">Debe (inversión)</th>'
+      + '<th class="col-haber">Haber (recuperado)</th>'
+      + '<th>Saldo acumulado</th>'
+      + '</tr></thead>'
+      + '<tbody>' + rows + '</tbody>'
+      + '<tfoot><tr class="total-row">'
+      + '<td colspan="5">Totales ' + sym + '</td>'
+      + '<td class="debe">' + fmt(totalDebe, 2) + ' USDT</td>'
+      + '<td class="haber">' + fmt(totalHaber, 2) + ' USDT</td>'
+      + '<td class="' + resClass + '">' + (resultado >= 0 ? '+' : '') + fmt(resultado, 2) + ' USDT</td>'
+      + '</tr></tfoot>'
+      + '</table></div></div>';
+  });
+  document.getElementById('libroContent').innerHTML = html;
+}
+
+function renderConceptos() {
+  const conceptos = [
+    {
+      num: '01',
+      titulo: 'Gap y Relleno de Gap',
+      badge: 'Análisis técnico',
+      intro: 'Un gap (hueco) es una zona del gráfico donde el precio saltó de un nivel a otro sin cotizar en medio — se ve como un espacio vacío entre velas. La teoría dice que el precio tiende a volver a esa zona para "cubrirla", porque quedaron órdenes sin ejecutar y liquidez pendiente.',
+      secciones: [
+        {
+          titulo: 'Tipos de gap en cripto',
+          items: [
+            { t: 'Gap CME (fin de semana)', d: 'BTC cotiza 24/7 pero los futuros de CME cierran el viernes y abren el lunes. Si el precio se mueve en fin de semana, deja un gap que estadísticamente se rellena con frecuencia.' },
+            { t: 'Gap en gráfico spot', d: 'Salto brusco entre una vela y la siguiente, normalmente por noticias importantes o liquidaciones en cascada.' }
+          ]
+        }
+      ],
+      alerta: 'No es una ley: hay gaps que tardan meses en rellenarse y algunos que nunca se rellenan. Úsalo como zona de interés, no como certeza.'
+    },
+    {
+      num: '02',
+      titulo: 'Cobertura (Hedge)',
+      badge: 'Gestión de riesgo',
+      intro: 'Una cobertura es una operación que abres para protegerte de una posición que ya tienes, reduciendo el riesgo de pérdida. Si tienes BTC comprado y temes una bajada, abres un corto en futuros para que las ganancias del corto compensen las pérdidas del spot.',
+      secciones: [
+        {
+          titulo: 'Tipos de cobertura',
+          items: [
+            { t: 'Cobertura total', d: 'Cubres el 100% de tu posición. Quedas neutral: no pierdes pero tampoco ganas si sube.' },
+            { t: 'Cobertura parcial', d: 'Cubres solo una parte. Reduces el riesgo pero mantienes exposición a la subida.' },
+            { t: 'Cobertura cruzada', d: 'Cubres BTC con ETH u otra cripto correlacionada. Menos preciso pero útil si no tienes futuros de ese activo.' }
+          ]
+        }
+      ],
+      alerta: 'Mantener una cobertura en futuros perpetuos tiene un coste llamado funding rate. Si la posición dura mucho puede erosionar el beneficio.'
+    },
+    {
+      num: '03',
+      titulo: 'Ondas de Elliott',
+      badge: 'Análisis técnico',
+      intro: 'Teoría que dice que el precio se mueve en patrones repetitivos de 8 ondas impulsados por la psicología colectiva: 5 ondas de impulso (a favor de la tendencia) y 3 ondas correctivas (en contra).',
+      secciones: [
+        {
+          titulo: '5 Ondas de impulso',
+          items: [
+            { t: 'Onda 1', d: 'Primer movimiento alcista. Poca gente lo detecta.' },
+            { t: 'Onda 2', d: 'Corrección. El precio retrocede pero no supera el origen de la onda 1.' },
+            { t: 'Onda 3', d: 'La más fuerte y larga. Donde entra la mayoría. Nunca es la más corta.' },
+            { t: 'Onda 4', d: 'Corrección suave. No entra en territorio de la onda 1.' },
+            { t: 'Onda 5', d: 'Último impulso con menos fuerza. Suele haber euforia. Señal de agotamiento.' }
+          ]
+        },
+        {
+          titulo: '3 Ondas correctivas (A, B, C)',
+          items: [
+            { t: 'Onda A', d: 'Primera bajada tras el impulso.' },
+            { t: 'Onda B', d: 'Rebote trampa: parece que la subida continúa pero es falso.' },
+            { t: 'Onda C', d: 'Bajada fuerte que confirma la corrección.' }
+          ]
+        }
+      ],
+      alerta: 'Es subjetiva: dos analistas pueden contar las ondas de forma diferente en el mismo gráfico. Combínala con otros indicadores.'
+    },
+    {
+      num: '04',
+      titulo: 'Divergencias y Convergencias',
+      badge: 'Indicadores',
+      intro: 'Se detectan comparando el movimiento del precio con el de un indicador (RSI, MACD, estocástico). Avisan de posibles cambios de tendencia o de su continuación.',
+      secciones: [
+        {
+          titulo: 'Tipos',
+          items: [
+            { t: 'Divergencia bajista', d: 'El precio hace un máximo más alto pero el indicador hace un máximo más bajo. La fuerza compradora se agota aunque el precio siga subiendo. Posible giro a la baja.' },
+            { t: 'Divergencia alcista', d: 'El precio hace un mínimo más bajo pero el indicador hace un mínimo más alto. La caída pierde fuerza. Posible giro al alza.' },
+            { t: 'Convergencia', d: 'Precio e indicador van en la misma dirección. Confirma que la tendencia tiene fuerza y puede continuar.' }
+          ]
+        },
+        {
+          titulo: 'Indicadores donde más se usan',
+          items: [
+            { t: 'RSI', d: 'El más común para detectar divergencias.' },
+            { t: 'MACD', d: 'Útil para divergencias en tendencias más largas.' },
+            { t: 'Estocástico', d: 'Especialmente útil en rangos laterales.' }
+          ]
+        }
+      ],
+      alerta: 'Una divergencia puede durar varias velas antes de resolverse. No es señal de entrada inmediata, sino una alerta de debilidad en el movimiento.'
+    }
+  ];
+
+  const html = conceptos.map(c => {
+    const seccionesHtml = c.secciones.map(s =>
+      '<div class="concepto-subtitulo">' + s.titulo + '</div>'
+      + '<div class="concepto-grid">'
+      + s.items.map(i =>
+        '<div class="concepto-item"><div class="concepto-item-title">' + i.t + '</div><div class="concepto-item-desc">' + i.d + '</div></div>'
+      ).join('')
+      + '</div>'
+    ).join('');
+    return '<div class="concepto-card">'
+      + '<div class="concepto-title"><span style="font-size:13px;color:#aaa;font-weight:400;">' + c.num + '</span> ' + c.titulo
+      + ' <span class="concepto-badge">' + c.badge + '</span></div>'
+      + '<div class="concepto-desc" style="margin-bottom:8px;">' + c.intro + '</div>'
+      + seccionesHtml
+      + '<div class="concepto-alerta">⚠️ ' + c.alerta + '</div>'
+      + '</div>';
+  }).join('');
+
+  document.getElementById('conceptosContent').innerHTML = html;
+}
+
+/* ===== FUTUROS ===== */
+function renderFuturos() {
+  const livePrice = sym => prices[sym]?.price || 0;
+
+  // Saldo card
+  const pnlRealizado = futuresOps.filter(o => o.estado === 'cerrada').reduce((a, o) => a + (o.pnl || 0), 0);
+  const futDesc = (a, b) => (b.fecha || '').localeCompare(a.fecha || '') || ((b.id || 0) - (a.id || 0));
+  const posAbiertas = futuresOps.filter(o => o.estado === 'abierta').sort(futDesc);
+  const pnlNoReal = posAbiertas.reduce((a, o) => {
+    const cur = livePrice(o.par.replace('-USDT','').replace('USDT',''));
+    if (!cur) return a;
+    const mult = o.dir === 'long' ? 1 : -1;
+    return a + mult * (cur - o.entrada) * o.cantidad;
+  }, 0);
+
+  const saldoHtml = `<div class="metric-grid" style="margin-bottom:16px;">
+    <div class="metric"><div class="metric-label">Saldo cuenta futuros</div>
+      <div class="metric-value" style="display:flex;align-items:center;gap:8px;">
+        <span id="futSaldoVal">${fmt(futuresSaldo,2)} USDT</span>
+        <button onclick="editFutSaldo()" style="height:24px;padding:0 8px;font-size:11px;"><i class="ti ti-pencil"></i></button>
+      </div>
+    </div>
+    <div class="metric"><div class="metric-label">P&L realizado</div><div class="metric-value ${pnlRealizado>=0?'green':'red'}">${pnlRealizado>=0?'+':''}${fmt(pnlRealizado,2)} USDT</div></div>
+    <div class="metric"><div class="metric-label">P&L no realizado</div><div class="metric-value ${pnlNoReal>=0?'green':'red'}">${pnlNoReal>=0?'+':''}${fmt(pnlNoReal,2)} USDT</div></div>
+    <div class="metric"><div class="metric-label">Posiciones abiertas</div><div class="metric-value">${posAbiertas.length}</div></div>
+  </div>`;
+
+  // Formulario nueva operación
+  const formHtml = `<div class="card">
+    <div class="card-title">Nueva operación de futuros</div>
+    <div class="row">
+      <select id="ftDir"><option value="long">Long ▲</option><option value="short">Short ▼</option></select>
+      <select id="ftPar">${symbols.map(s=>`<option value="${s}-USDT">${s}-USDT</option>`).join('')}</select>
+      <input type="number" id="ftEntrada" placeholder="Precio entrada" step="any" style="width:150px;" />
+      <input type="number" id="ftCantidad" placeholder="Cantidad" step="any" />
+      <input type="number" id="ftApal" placeholder="Apalancam." step="1" min="1" style="width:110px;" />
+    </div>
+    <div class="row">
+      <input type="number" id="ftTP" placeholder="Take Profit" step="any" />
+      <input type="number" id="ftSL" placeholder="Stop Loss" step="any" />
+      <input type="date" id="ftFecha" />
+      <input type="text" id="ftNotas" placeholder="Notas (opcional)" style="width:180px;" />
+      <button onclick="ftCargarPrecio()"><i class="ti ti-cloud-download"></i> Precio actual</button>
+      <button class="primary" onclick="addFutureOp()"><i class="ti ti-plus"></i> Añadir</button>
+    </div>
+    <div id="ftMsg" class="small muted" style="margin-top:4px;"></div>
+  </div>`;
+
+  // Simulador
+  const simHtml = `<div class="card">
+    <div class="card-title">Simulador Long / Short</div>
+    <div class="row">
+      <select id="fsDir"><option value="long">Long ▲</option><option value="short">Short ▼</option></select>
+      <select id="fsPar">${symbols.map(s=>`<option value="${s}-USDT">${s}-USDT</option>`).join('')}</select>
+      <input type="number" id="fsEntrada" placeholder="Precio entrada" step="any" style="width:150px;" />
+      <input type="number" id="fsCantidad" placeholder="Cantidad" step="any" />
+      <input type="number" id="fsApal" placeholder="Apalancam." step="1" min="1" style="width:110px;" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;">
+        <div class="card-title" style="color:#16a34a;margin-bottom:8px;">Take Profit — rellena precio O P&L</div>
+        <div class="row" style="margin:0;gap:6px;">
+          <input type="number" id="fsTP" placeholder="Precio TP" step="any" style="width:130px;" oninput="fsSyncTP('precio')" />
+          <span style="color:#888;font-size:12px;">o</span>
+          <input type="number" id="fsTPpnl" placeholder="P&L esperado (USDT)" step="any" style="width:160px;" oninput="fsSyncTP('pnl')" />
+        </div>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;">
+        <div class="card-title" style="color:#dc2626;margin-bottom:8px;">Stop Loss — rellena precio O P&L</div>
+        <div class="row" style="margin:0;gap:6px;">
+          <input type="number" id="fsSL" placeholder="Precio SL" step="any" style="width:130px;" oninput="fsSyncSL('precio')" />
+          <span style="color:#888;font-size:12px;">o</span>
+          <input type="number" id="fsSLpnl" placeholder="P&L esperado (USDT)" step="any" style="width:160px;" oninput="fsSyncSL('pnl')" />
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <button class="primary" onclick="runFutSim()"><i class="ti ti-calculator"></i> Simular</button>
+    </div>
+    <div id="fsResult"></div>
+  </div>`;
+
+  // Tabla posiciones abiertas
+  const abiertasHtml = posAbiertas.length ? `<div class="card">
+    <div class="card-title">Posiciones abiertas</div>
+    <div class="ovx"><table>
+      <thead><tr><th>Dir.</th><th>Par</th><th>Entrada</th><th>Cantidad</th><th>Apal.</th><th>TP</th><th>SL</th><th>P&L actual</th><th>Liquidación</th><th></th></tr></thead>
+      <tbody>${posAbiertas.map(o => {
+        const sym = o.par.replace('-USDT','');
+        const cur = livePrice(sym);
+        const mult = o.dir === 'long' ? 1 : -1;
+        const pnl = cur ? mult * (cur - o.entrada) * o.cantidad : null;
+        const liq = o.dir === 'long' ? o.entrada * (1 - 1/o.apal) : o.entrada * (1 + 1/o.apal);
+        const cls = pnl !== null ? (pnl >= 0 ? 'green' : 'red') : '';
+        return `<tr>
+          <td><span class="tag ${o.dir==='long'?'tag-buy':'tag-sell'}">${o.dir==='long'?'Long ▲':'Short ▼'}</span></td>
+          <td>${o.par}</td>
+          <td>${fmtPrice(o.entrada)}</td>
+          <td>${fmt(o.cantidad,4)}</td>
+          <td>${o.apal}x</td>
+          <td class="green">${o.tp ? fmtPrice(o.tp) : '—'}</td>
+          <td class="red">${o.sl ? fmtPrice(o.sl) : '—'}</td>
+          <td class="${cls}">${pnl !== null ? (pnl>=0?'+':'')+fmt(pnl,2)+' USDT' : '—'}</td>
+          <td class="red">${fmtPrice(liq)}</td>
+          <td style="display:flex;gap:4px;">
+            <button onclick="closeFutureOp(${o.id})" class="success" style="height:28px;padding:0 8px;font-size:11px;">Cerrar</button>
+            <button onclick="deleteFutureOp(${o.id})" class="danger" style="height:28px;padding:0 8px;font-size:11px;"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>` : '';
+
+  // Tabla historial futuros
+  const cerradas = futuresOps.filter(o => o.estado === 'cerrada').sort(futDesc);
+  const histHtml = cerradas.length ? `<div class="card">
+    <div class="card-title">Historial de operaciones cerradas</div>
+    <div class="ovx"><table>
+      <thead><tr><th>Dir.</th><th>Par</th><th>Entrada</th><th>Cierre</th><th>Cantidad</th><th>Apal.</th><th>P&L</th><th>Fecha</th><th>Notas</th></tr></thead>
+      <tbody>${cerradas.map(o => {
+        const cls = (o.pnl||0) >= 0 ? 'green' : 'red';
+        return `<tr>
+          <td><span class="tag ${o.dir==='long'?'tag-buy':'tag-sell'}">${o.dir==='long'?'Long ▲':'Short ▼'}</span></td>
+          <td>${o.par}</td>
+          <td>${fmtPrice(o.entrada)}</td>
+          <td>${fmtPrice(o.cierre)}</td>
+          <td>${fmt(o.cantidad,4)}</td>
+          <td>${o.apal}x</td>
+          <td class="${cls}">${(o.pnl||0)>=0?'+':''}${fmt(o.pnl||0,2)} USDT</td>
+          <td>${o.fecha}</td>
+          <td class="muted small">${o.notas||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>` : '';
+
+  document.getElementById('futurosContent').innerHTML = saldoHtml + formHtml + simHtml + abiertasHtml + histHtml;
+}
+
+function editFutSaldo() {
+  const v = prompt('Saldo actual de tu cuenta de futuros (USDT):', futuresSaldo);
+  if (v === null) return;
+  const n = parseFloat(v);
+  if (isNaN(n)) return;
+  futuresSaldo = n;
+  renderFuturos();
+  scheduleSave();
+}
+
+function ftCargarPrecio() {
+  const par = document.getElementById('ftPar').value;
+  const sym = par.replace('-USDT','');
+  const p = prices[sym]?.price;
+  if (p) {
+    document.getElementById('ftEntrada').value = p;
+    document.getElementById('ftMsg').textContent = 'Precio actual cargado: ' + fmtPrice(p) + ' USDT';
+  } else {
+    document.getElementById('ftMsg').textContent = 'Precio no disponible, introdúcelo manualmente.';
+  }
+}
+
+function addFutureOp() {
+  const dir = document.getElementById('ftDir').value;
+  const par = document.getElementById('ftPar').value;
+  const entrada = parseFloat(document.getElementById('ftEntrada').value);
+  const cantidad = parseFloat(document.getElementById('ftCantidad').value);
+  const apal = parseFloat(document.getElementById('ftApal').value);
+  const tp = parseFloat(document.getElementById('ftTP').value) || null;
+  const sl = parseFloat(document.getElementById('ftSL').value) || null;
+  const fecha = document.getElementById('ftFecha').value;
+  const notas = document.getElementById('ftNotas').value;
+  if (isNaN(entrada) || isNaN(cantidad) || isNaN(apal) || !fecha) {
+    document.getElementById('ftMsg').textContent = 'Completa entrada, cantidad, apalancamiento y fecha.';
+    return;
+  }
+  futuresOps.push({ id: Date.now(), dir, par, entrada, cantidad, apal, tp, sl, fecha, notas, estado: 'abierta' });
+  document.getElementById('ftMsg').innerHTML = '<span class="green">✓</span> Operación añadida correctamente.';
+  document.getElementById('ftEntrada').value = '';
+  document.getElementById('ftCantidad').value = '';
+  document.getElementById('ftApal').value = '';
+  document.getElementById('ftTP').value = '';
+  document.getElementById('ftSL').value = '';
+  document.getElementById('ftNotas').value = '';
+  renderFuturos();
+  scheduleSave();
+}
+
+function closeFutureOp(id) {
+  const op = futuresOps.find(o => o.id === id);
+  if (!op) return;
+  const precioStr = prompt('Precio de cierre de la operación:', prices[op.par.replace('-USDT','')]?.price || '');
+  if (precioStr === null) return;
+  const cierre = parseFloat(precioStr);
+  if (isNaN(cierre)) return;
+  const mult = op.dir === 'long' ? 1 : -1;
+  op.pnl = mult * (cierre - op.entrada) * op.cantidad;
+  op.cierre = cierre;
+  op.estado = 'cerrada';
+  futuresSaldo += op.pnl;
+  renderFuturos();
+  scheduleSave();
+  showToast((op.pnl >= 0 ? '✓ Ganancia: +' : '✗ Pérdida: ') + fmt(op.pnl, 2) + ' USDT');
+}
+
+function deleteFutureOp(id) {
+  if (!confirm('¿Eliminar esta operación?')) return;
+  futuresOps = futuresOps.filter(o => o.id !== id);
+  renderFuturos();
+  scheduleSave();
+}
+
+function fsGetBase() {
+  const entrada = parseFloat(document.getElementById('fsEntrada').value);
+  const cantidad = parseFloat(document.getElementById('fsCantidad').value);
+  const apal = parseFloat(document.getElementById('fsApal').value);
+  const dir = document.getElementById('fsDir').value;
+  return { entrada, cantidad, apal, dir, mult: dir === 'long' ? 1 : -1 };
+}
+
+function fsSyncTP(fuente) {
+  const { entrada, cantidad, mult } = fsGetBase();
+  if (isNaN(entrada) || isNaN(cantidad)) return;
+  if (fuente === 'precio') {
+    const tp = parseFloat(document.getElementById('fsTP').value);
+    if (!isNaN(tp)) document.getElementById('fsTPpnl').value = fmt(mult * (tp - entrada) * cantidad, 2).replace(/\./g,',');
+  } else {
+    const pnl = parseFloat(document.getElementById('fsTPpnl').value);
+    if (!isNaN(pnl)) document.getElementById('fsTP').value = (entrada + (pnl / (mult * cantidad))).toFixed(6);
+  }
+}
+
+function fsSyncSL(fuente) {
+  const { entrada, cantidad, mult } = fsGetBase();
+  if (isNaN(entrada) || isNaN(cantidad)) return;
+  if (fuente === 'precio') {
+    const sl = parseFloat(document.getElementById('fsSL').value);
+    if (!isNaN(sl)) document.getElementById('fsSLpnl').value = fmt(mult * (sl - entrada) * cantidad, 2).replace(/\./g,',');
+  } else {
+    const pnl = parseFloat(document.getElementById('fsSLpnl').value);
+    if (!isNaN(pnl)) document.getElementById('fsSL').value = (entrada + (pnl / (mult * cantidad))).toFixed(6);
+  }
+}
+
+function runFutSim() {
+  const dir = document.getElementById('fsDir').value;
+  const par = document.getElementById('fsPar').value;
+  const entrada = parseFloat(document.getElementById('fsEntrada').value);
+  const cantidad = parseFloat(document.getElementById('fsCantidad').value);
+  const apal = parseFloat(document.getElementById('fsApal').value);
+  const tp = parseFloat(document.getElementById('fsTP').value);
+  const sl = parseFloat(document.getElementById('fsSL').value);
+  if (isNaN(entrada) || isNaN(cantidad) || isNaN(apal)) {
+    document.getElementById('fsResult').innerHTML = '<div class="muted small" style="margin-top:8px;">Introduce entrada, cantidad y apalancamiento.</div>';
+    return;
+  }
+  const margen = (entrada * cantidad) / apal;
+  const liq = dir === 'long' ? entrada * (1 - 1/apal) : entrada * (1 + 1/apal);
+  const mult = dir === 'long' ? 1 : -1;
+  const pnlTP = !isNaN(tp) ? mult * (tp - entrada) * cantidad : null;
+  const pnlSL = !isNaN(sl) ? mult * (sl - entrada) * cantidad : null;
+  const rr = pnlTP !== null && pnlSL !== null ? Math.abs(pnlTP / pnlSL) : null;
+  const dirLabel = dir === 'long' ? 'Long ▲' : 'Short ▼';
+  const liqCls = dir === 'long' ? 'red' : 'green';
+
+  document.getElementById('fsResult').innerHTML = `<div class="sim-result-box" style="margin-top:1rem;">
+    <div class="sim-row"><span>Dirección</span><span><span class="tag ${dir==='long'?'tag-buy':'tag-sell'}">${dirLabel}</span></span></div>
+    <div class="sim-row"><span>Par</span><span>${par}</span></div>
+    <div class="sim-row"><span>Precio entrada</span><span>${fmtPrice(entrada)} USDT</span></div>
+    <div class="sim-row"><span>Cantidad</span><span>${fmt(cantidad,4)}</span></div>
+    <div class="sim-row"><span>Apalancamiento</span><span>${apal}x</span></div>
+    <div class="sim-row"><span>Margen necesario</span><span style="font-weight:600;">${fmt(margen,2)} USDT</span></div>
+    <div class="sim-row"><span class="${liqCls}">Precio de liquidación</span><span class="${liqCls}" style="font-weight:600;">${fmtPrice(liq)} USDT</span></div>
+    ${pnlTP !== null ? `<div class="sim-row"><span class="green">P&L en TP (${fmtPrice(tp)})</span><span class="green">+${fmt(pnlTP,2)} USDT (${fmt(pnlTP/margen*100,1)}% margen)</span></div>` : ''}
+    ${pnlSL !== null ? `<div class="sim-row"><span class="red">P&L en SL (${fmtPrice(sl)})</span><span class="red">${fmt(pnlSL,2)} USDT (${fmt(pnlSL/margen*100,1)}% margen)</span></div>` : ''}
+    ${rr !== null ? `<div class="sim-row"><span>Ratio Riesgo/Beneficio</span><span style="font-weight:600;">1 : ${fmt(rr,2)}</span></div>` : ''}
+  </div>`;
+}
+/* ===== S&P 500 (widget de TradingView) ===== */
+const SP_SYMBOLS = [
+  { id: 'FOREXCOM:SPXUSD', label: 'S&P 500 (CFD)' },
+  { id: 'AMEX:SPY',        label: 'SPY (ETF)' },
+  { id: 'SP:SPX',          label: 'Índice SPX' }
+];
+let spSymbol = SP_SYMBOLS[0].id;
+let spLoaded = null;
+
+function mountTV(elId, file, cfg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>';
+  const s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = 'https://s3.tradingview.com/external-embedding/' + file;
+  s.innerHTML = JSON.stringify(cfg);
+  el.appendChild(s);
+}
+
+function setSpSymbol(id) {
+  spSymbol = id;
+  renderSP500();
+}
+
+function renderSP500() {
+  document.getElementById('spButtons').innerHTML = SP_SYMBOLS.map(s =>
+    `<button class="sp-btn ${s.id===spSymbol?'active':''}" onclick="setSpSymbol('${s.id}')">${s.label}</button>`
+  ).join('');
+  document.getElementById('spLink').href = 'https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(spSymbol);
+  if (spLoaded === spSymbol) return; // no recargar el gráfico si ya está puesto
+  spLoaded = spSymbol;
+  mountTV('spQuote', 'embed-widget-symbol-info.js', {
+    symbol: spSymbol, width: '100%', locale: 'es', colorTheme: 'light', isTransparent: true
+  });
+  mountTV('spChart', 'embed-widget-advanced-chart.js', {
+    autosize: true, symbol: spSymbol, interval: 'D', timezone: 'Europe/Madrid',
+    theme: 'light', style: '1', locale: 'es', allow_symbol_change: false,
+    hide_side_toolbar: true, calendar: false, support_host: 'https://www.tradingview.com'
+  });
+}
+
+loadData();
+populateSymSelects();
+renderOpsTable();
+fetchPrices();
+setInterval(fetchPrices, 15000);
+</script>
+</body>
+</html>
