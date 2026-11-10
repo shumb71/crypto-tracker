@@ -118,6 +118,44 @@ tr:last-child td { border-bottom: none; }
 .saldo-tip { position:absolute; pointer-events:none; background:#1a1a1a; color:#fff; font-size:11px; line-height:1.45; padding:6px 9px; border-radius:8px; white-space:nowrap; display:none; z-index:2; }
 .sp-btn.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
 .badge-parcial { display:inline-block; font-size:10px; padding:1px 7px; border-radius:99px; background:#fffbeb; color:#92400e; border:1px solid #fde68a; font-weight:600; margin-left:6px; vertical-align:middle; }
+.sg-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-bottom:14px; }
+.sg-sym { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; cursor:pointer; transition:all 0.15s; }
+.sg-sym:hover { border-color:#c7d2fe; }
+.sg-sym.sel { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
+.sg-big { font-size:24px; font-weight:600; margin:6px 0 2px; }
+.sg-big span { font-size:13px; font-weight:500; color:#888; }
+.sg-big small { font-size:12px; font-weight:500; }
+.sg-big.sg-g { color:#16a34a; background:none; border:none; } .sg-big.sg-r { color:#dc2626; background:none; border:none; } .sg-big.sg-a { color:#d97706; background:none; border:none; }
+.sg-pills { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
+.sg-pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:99px; border:1px solid #e5e7eb; font-weight:500; white-space:nowrap; }
+.sg-pill.sg-g { background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; }
+.sg-pill.sg-r { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+.sg-pill.sg-a { background:#fffbeb; color:#b45309; border-color:#fde68a; }
+.sg-pill.sg-n { background:#f3f4f6; color:#444; }
+.sg-row { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f3f4f6; align-items:flex-start; }
+.sg-row:last-child { border-bottom:none; }
+.sg-ico { width:26px; flex:none; font-size:18px; line-height:1.2; text-align:center; padding-top:1px; }
+.sg-body { flex:1; min-width:0; }
+.sg-tit { font-size:13px; font-weight:600; margin-bottom:2px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.sg-txt { font-size:13px; line-height:1.6; color:#333; }
+.sg-sub { font-size:12px; font-weight:600; color:#444; text-transform:uppercase; letter-spacing:0.04em; margin:16px 0 2px; padding-bottom:4px; border-bottom:2px solid #f3f4f6; }
+.sg-sub .muted { text-transform:none; letter-spacing:0; font-weight:500; }
+.sg-reg { font-size:10px; padding:1px 8px; border-radius:99px; background:#eff6ff; color:#2563eb; font-weight:500; }
+.sg-tag { display:inline-block; font-size:10px; padding:1px 8px; border-radius:99px; font-weight:600; white-space:nowrap; }
+.sg-t-ind { background:#eef2ff; color:#4338ca; } .sg-t-red { background:#fef2f2; color:#dc2626; }
+.sg-t-gris { background:#f3f4f6; color:#555; } .sg-t-amb { background:#fffbeb; color:#b45309; }
+.sg-det { margin-top:4px; }
+.sg-det summary { cursor:pointer; font-size:12px; color:#6366f1; }
+.sg-det > div { font-size:12px; color:#555; line-height:1.55; padding:4px 0 2px 2px; }
+.sg-gl summary { color:#1a1a1a; font-size:13px; font-weight:500; padding:5px 0; }
+.sg-bar { display:block; width:34px; height:8px; border-radius:4px; background:#f3f4f6; position:relative; margin-top:6px; }
+.sg-bar::after { content:''; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:#cbd5e1; }
+.sg-bar-fill { position:absolute; top:0; bottom:0; border-radius:4px; }
+.sg-bar-fill.pos { background:#22c55e; } .sg-bar-fill.neg { background:#ef4444; }
+.sg-num { font-weight:600; font-size:12px; }
+.sg-datos { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; background:#f8f9fa; border-radius:8px; padding:8px 12px; }
+.sg-chk { width:16px; height:16px; cursor:pointer; margin-top:2px; }
+@media (max-width:560px) { .sg-big { font-size:20px; } .sg-ico { width:22px; } }
 </style>
 </head>
 <body>
@@ -126,7 +164,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.6</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.7</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -144,6 +182,7 @@ tr:last-child td { border-bottom: none; }
     <button class="nav-btn" onclick="showSection('conceptos',this)"><i class="ti ti-bulb"></i> Conceptos</button>
     <button class="nav-btn" onclick="showSection('futuros',this)"><i class="ti ti-trending-up"></i> Futuros</button>
     <button class="nav-btn" onclick="showSection('sp500',this)"><i class="ti ti-chart-candle"></i> S&amp;P 500</button>
+    <button class="nav-btn" onclick="showSection('senales',this)"><i class="ti ti-antenna-bars-5"></i> Señales</button>
   </nav>
 
   <div id="precios" class="section active">
@@ -229,6 +268,18 @@ tr:last-child td { border-bottom: none; }
       <div id="spChart" class="tradingview-widget-container" style="height:520px;"></div>
       <div class="small muted" style="margin-top:8px;">Datos de TradingView. Si una opción sale bloqueada o en blanco, prueba otra de las de arriba. <a id="spLink" href="#" target="_blank" rel="noopener">Abrir en TradingView</a></div>
     </div>
+  </div>
+
+  <div id="senales" class="section">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:0;">
+        <div class="card-title" style="margin-bottom:0;">Señales del bot (BTC, ETH…)</div>
+        <button class="sp-btn" onclick="cargarSenales(true)"><i class="ti ti-refresh"></i> Actualizar</button>
+      </div>
+      <div class="small muted" id="sgEstado" style="margin-top:4px;"></div>
+      <div class="small muted" style="margin-top:4px;">Lectura automática de 1h, 4h, 1d y 1s con tu estrategia, explicada paso a paso. Es una ayuda para aprender y revisar, no una recomendación de compra o venta.</div>
+    </div>
+    <div id="sgContenido"></div>
   </div>
 
   <div id="historial" class="section">
@@ -343,6 +394,7 @@ function showSection(id, btn) {
   if (id === 'conceptos') renderConceptos();
   if (id === 'futuros') renderFuturos();
   if (id === 'sp500') renderSP500();
+  if (id === 'senales') renderSenales();
   if (id === 'operaciones') { renderOpsTable(); populateSymSelects(); }
 }
 
@@ -2180,6 +2232,256 @@ populateSymSelects();
 renderOpsTable();
 fetchPrices();
 setInterval(fetchPrices, 15000);
+
+// ===================== SEÑALES: panel del bot de GitHub (v2.7) =====================
+// Lee signals.json (lo publica el bot en la rama signals-data cada ~15 min) y lo explica.
+// No toca los datos de la app: las casillas manuales usan su propia clave en localStorage.
+const SG_URL = 'https://raw.githubusercontent.com/shumb71/crypto-tracker/signals-data/signals.json';
+const SG_CHECK_KEY = 'crypto_tracker_senales_checks';
+const SG_TFS = [['1h', '1h'], ['4h', '4h'], ['1d', '1d'], ['1w', '1s']];
+const SG_ESTADOS = {
+  sana: ['✅', 'sana'], agotandose: ['🪫', 'agotándose'], lateral: ['↔️', 'lateral'],
+  ruptura: ['💥', 'ruptura confirmada'], ruptura_dudosa: ['❔', 'posible ruptura'],
+  sin_tendencia: ['·', 'sin tendencia'], sin_datos: ['·', 'sin datos']
+};
+const SG_TIPOS = {
+  confirma: ['Confirmaría', 'sg-t-ind'], anula: ['Anularía', 'sg-t-red'],
+  vigila: ['Mientras tanto', 'sg-t-gris'], debilita: ['Debilitaría', 'sg-t-amb']
+};
+let sgData = null, sgSym = null, sgTf = '4h', sgFetching = false, sgFetchedAt = 0, sgError = '';
+
+function sgEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function sgNum(x, d) {
+  d = d === undefined ? 1 : d;
+  return Number(x).toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function sgPrecio(x) {
+  x = Number(x);
+  return sgNum(x, x >= 10000 ? 0 : x >= 100 ? 1 : x >= 1 ? 2 : 5);
+}
+function sgClase(score) { return score >= 0.2 ? 'sg-g' : score <= -0.2 ? 'sg-r' : 'sg-a'; }
+function sgEtiqueta(score) {
+  const f = Math.abs(score) >= 0.5 ? 'muy ' : '';
+  return score >= 0.2 ? f + 'alcista' : score <= -0.2 ? f + 'bajista' : 'neutral';
+}
+function sgFlecha(d) { return d > 0 ? '▲' : d < 0 ? '▼' : ''; }
+function sgBase(sym) { return sym.replace(/(USDT|USDC|FDUSD|EUR|BTC|ETH)$/, '') || sym; }
+function sgNombreTf(tf) { const x = SG_TFS.find(t => t[0] === tf); return x ? x[1] : tf; }
+
+function sgLeerChecks() {
+  try { return JSON.parse(localStorage.getItem(SG_CHECK_KEY) || '{}'); } catch (e) { return {}; }
+}
+function sgCheck(key, val) {
+  const c = sgLeerChecks();
+  if (val) c[key] = 1; else delete c[key];
+  try { localStorage.setItem(SG_CHECK_KEY, JSON.stringify(c)); } catch (e) { /* sin almacenamiento: no pasa nada */ }
+}
+
+function sgEstadoTxt(t) {
+  if (!t) return '· sin datos';
+  const e = SG_ESTADOS[t.estado] || ['·', t.estado];
+  let s = e[0] + ' ' + e[1];
+  if (t.estado === 'sana' || t.estado === 'agotandose') s += ' ' + sgFlecha(t.dir);
+  if (t.estado === 'agotandose') s += ' ' + t.n_senales + '/4';
+  if ((t.estado === 'ruptura' || t.estado === 'ruptura_dudosa') && t.ruptura) s += ' ' + sgFlecha(t.ruptura.dir);
+  return s;
+}
+
+// ---------- carga ----------
+async function cargarSenales(force) {
+  if (sgFetching) return;
+  if (!force && sgData && Date.now() - sgFetchedAt < 180000) { sgRender(); return; }
+  sgFetching = true; sgError = '';
+  sgRender();
+  try {
+    const r = await fetch(SG_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!d || !d.senales) throw new Error('el fichero no tiene el formato esperado');
+    sgData = d; sgFetchedAt = Date.now();
+    if (!sgSym || !d.senales[sgSym]) sgSym = Object.keys(d.senales)[0] || null;
+  } catch (e) {
+    sgError = (e && e.message) || String(e);
+  }
+  sgFetching = false;
+  sgRender();
+}
+function renderSenales() { cargarSenales(false); }
+function sgPick(sym) { sgSym = sym; sgRender(); }
+function sgSetTf(tf) { sgTf = tf; sgRender(); }
+function sgIrConceptos() {
+  const b = Array.from(document.querySelectorAll('.nav-btn')).find(x => x.textContent.indexOf('Conceptos') >= 0);
+  if (b) showSection('conceptos', b);
+}
+
+// ---------- piezas ----------
+function sgDonde(txt) {
+  return txt ? `<details class="sg-det"><summary>¿Dónde lo veo en mi gráfico?</summary><div>${sgEsc(txt)}</div></details>` : '';
+}
+function sgRegla(r) { return r ? `<span class="sg-reg">${sgEsc(r)}</span>` : ''; }
+function sgIcono(ok) {
+  return ok === true ? '<i class="ti ti-circle-check green"></i>'
+    : ok === false ? '<i class="ti ti-circle-x red"></i>' : '<i class="ti ti-minus muted"></i>';
+}
+function sgFila(ico, titulo, texto, extra) {
+  return `<div class="sg-row"><div class="sg-ico">${ico}</div><div class="sg-body">
+    <div class="sg-tit">${sgEsc(titulo)} ${extra || ''}</div>${texto}</div></div>`;
+}
+function sgCard(titulo, cabecera, cuerpo) {
+  return `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px;">
+    <div class="card-title" style="margin-bottom:0;">${sgEsc(titulo)}</div>${cabecera || ''}</div>${cuerpo}</div>`;
+}
+function sgItem(it, modo, claveCheck) {
+  let ico, extra = sgRegla(it.regla);
+  if (modo === 'zona') {
+    ico = it.activa ? '<i class="ti ti-alert-triangle" style="color:#d97706"></i>' : '<i class="ti ti-circle-check green"></i>';
+    if (it.activa) extra += ' <span class="sg-t-amb sg-tag">activa</span>';
+  } else if (it.manual) {
+    if (claveCheck) {
+      const marcada = !!sgLeerChecks()[claveCheck];
+      ico = `<input type="checkbox" class="sg-chk" ${marcada ? 'checked' : ''} onchange="sgCheck('${sgEsc(claveCheck)}', this.checked)">`;
+    } else ico = '<i class="ti ti-hand-stop muted"></i>';
+    extra += ' <span class="sg-t-gris sg-tag">lo marcas tú</span>';
+  } else ico = sgIcono(it.ok);
+  return sgFila(ico, it.titulo, `<div class="sg-txt">${sgEsc(it.texto)}</div>${sgDonde(it.donde)}`, extra);
+}
+
+// ---------- bloques ----------
+function sgResumenHtml() {
+  const cards = Object.keys(sgData.senales).map(sym => {
+    const s = sgData.senales[sym], g = s.global || {};
+    const pills = SG_TFS.map(t => {
+      const a = s.tf[t[0]];
+      if (!a) return '';
+      const te = a.tendencia;
+      const marca = te && te.estado === 'agotandose' ? ' 🪫' : te && te.estado === 'ruptura' ? ' 💥' : '';
+      return `<span class="sg-pill ${sgClase(a.score)}" title="${sgEsc(sgEstadoTxt(te))}">${t[1]} ${sgNum(a.nota)}${marca}</span>`;
+    }).join('');
+    return `<div class="sg-sym ${sym === sgSym ? 'sel' : ''}" onclick="sgPick('${sgEsc(sym)}')">
+      <div class="row" style="justify-content:space-between;margin:0;"><b>${sgEsc(sgBase(sym))}</b>
+      <span class="muted small">${sgPrecio(s.precio)} $</span></div>
+      <div class="sg-big ${sgClase(g.score || 0)}">${sgNum(g.nota)}<span>/10</span> <small>${sgEsc((g.etiqueta || '').toLowerCase())}</small></div>
+      <div class="sg-pills">${pills}</div></div>`;
+  }).join('');
+  return `<div class="sg-grid">${cards}</div>`;
+}
+
+function sgCardNota(a) {
+  const p = a.porques;
+  const filas = p.bloques.map(b => {
+    const w = Math.round(Math.min(1, Math.abs(b.valor)) * 50);
+    const barra = `<span class="sg-bar"><span class="sg-bar-fill ${b.valor >= 0 ? 'pos' : 'neg'}" style="${b.valor >= 0 ? 'left:50%' : 'right:50%'};width:${w}%"></span></span>`;
+    const dato = `<span class="sg-num ${b.aporta >= 0 ? 'green' : 'red'}">${b.aporta >= 0 ? '+' : '−'}${sgNum(Math.abs(b.aporta), 2)}</span>`;
+    return sgFila(barra, b.titulo, `<div class="sg-txt">${sgEsc(b.texto)}</div>${sgDonde(b.donde)}`,
+      `<span class="muted small">valor ${sgNum(b.valor, 2)} × peso ${sgNum(b.peso, 2)} =</span> ${dato}`);
+  }).join('');
+  const cab = `<span class="sg-pill ${sgClase(a.score)}">${sgNum(a.nota)}/10 · ${sgEsc(sgEtiqueta(a.score))}</span>`;
+  return sgCard('Por qué esta nota', cab, `<div class="small muted" style="margin-bottom:6px;">${sgEsc(p.resumen)}</div>${filas}`);
+}
+
+function sgCardTendencia(a) {
+  const te = a.tendencia_explicada;
+  if (!te) return '';
+  const filas = (te.senales || []).map(x => sgItem(x, 'ok')).join('');
+  const cab = `<span class="sg-pill sg-n">${sgEsc(sgEstadoTxt(a.tendencia))}</span>`;
+  return sgCard('Estado de la tendencia', cab,
+    `<div class="sg-txt" style="margin-bottom:6px;">${sgEsc(te.resumen)}</div>${filas}` +
+    (filas ? '<div class="small muted" style="margin-top:8px;">Se avisa de «agotándose» cuando se cumplen al menos 2 de las 4 señales. La divergencia cuenta una sola vez aunque la vean el RSI y el Squeeze.</div>' : ''));
+}
+
+function sgCardEscenarios(a) {
+  const es = a.escenarios || [];
+  if (!es.length) return '';
+  const filas = es.map(x => {
+    const t = SG_TIPOS[x.tipo] || [x.tipo, 'sg-t-gris'];
+    return sgFila(`<span class="sg-tag ${t[1]}">${sgEsc(t[0])}</span>`, '',
+      `<div class="sg-txt"><b>Si:</b> ${sgEsc(x.cuando)}.<br><b>Entonces:</b> ${sgEsc(x.entonces)}</div>`);
+  }).join('');
+  return sgCard('Qué lo confirmaría o lo anularía', '', filas);
+}
+
+function sgCardEstrategia(a) {
+  const st = a.estrategia;
+  if (!st) return sgCard('Tu estrategia (guía TradingLatino)', '', '<div class="muted small">Hacen falta unas 130 velas en esta temporalidad para evaluarla.</div>');
+  const z = st.zona || {};
+  const kb = sgSym + '|' + sgTf;
+  const dato = (k, v) => `<span class="sg-dato"><span class="muted">${k}</span> ${sgEsc(v)}</span>`;
+  const cab = [
+    dato('Precio en el rango:', 'parte ' + z.nombre + ' (' + sgNum(100 * z.pos, 0) + ' %)'),
+    dato('Squeeze:', z.squeeze_color || '—'),
+    dato('ADX:', 'pendiente ' + (z.adx_pendiente < 0 ? 'negativa' : 'positiva'))
+  ].join('');
+  const sub = (t, r) => `<div class="sg-sub">${sgEsc(t)} <span class="muted">${r}</span></div>`;
+  const en = st.entrada_long, zn = st.zonas_no_operables, sa = st.salida, ck = st.checklist;
+  return sgCard('Tu estrategia (guía TradingLatino · solo compras)', '',
+    `<div class="sg-datos">${cab}</div>` +
+    sub('Patrón de entrada en long', '— cumple ' + en.cumple + ' de ' + en.total) + en.items.map(i => sgItem(i, 'ok')).join('') +
+    sub('Zonas no operables', '— ' + (zn.activas ? zn.activas + ' activa(s): mejor no comprar aquí' : 'ninguna activa')) + zn.items.map(i => sgItem(i, 'zona')).join('') +
+    sub('Patrón de salida / toma de beneficios', '— cumple ' + sa.cumple + ' de ' + sa.total + ' medibles') + sa.items.map(i => sgItem(i, 'ok')).join('') +
+    sub('Checklist antes de operar', '— ' + ck.auto_ok + ' de ' + ck.auto_total + ' automáticos en verde; los de riesgo los marcas tú') +
+    ck.items.map(i => sgItem(i, 'ok', i.manual ? kb + '|' + i.id : null)).join('') +
+    '<div class="concepto-alerta" style="margin-top:12px;">Esto es un recordatorio de las reglas de tu guía, solo para compras. No es una recomendación de comprar ni de vender. Las condiciones se calculan con velas de Binance y umbrales orientativos: pueden no coincidir al milímetro con lo que ves en TradingView.</div>');
+}
+
+const SG_GLOSARIO = [
+  ['Nota de 0 a 10', 'Resume cuántas señales apuntan al mismo lado. 0 = todo bajista, 5 = neutral, 10 = todo alcista. Es una puntuación de coincidencia, no una probabilidad de que suba o baje.'],
+  ['EMA (media móvil exponencial)', 'Media del precio que da más peso a las últimas velas. La EMA 10 (azul) es el corto plazo y la EMA 55 (café) el medio plazo; tu guía las usa para ver si la tendencia se agota. La nota usa además la EMA 50 y la 200 para la tendencia de fondo.'],
+  ['RSI', 'Mide la fuerza de las subidas frente a las bajadas, de 0 a 100. Por encima de 50 manda el impulso comprador; sobre 70 se habla de sobrecompra y bajo 30 de sobreventa.'],
+  ['MACD', 'Diferencia entre dos medias (12 y 26 velas). Su histograma crece cuando el impulso acelera y se encoge cuando se frena.'],
+  ['ADX', 'Mide la fuerza de la tendencia, no su dirección. Con pendiente positiva, el movimiento lleva fuerza; con pendiente negativa, la pierde. Sobre 25 suele haber tendencia y bajo 20 no.'],
+  ['Squeeze Momentum (LazyBear)', 'Histograma de impulso. Según tu guía: rojo oscuro = bajista acelerando; rojo claro = la bajada pierde fuerza y se gira al alza; verde oscuro = alcista acelerando; verde claro = la subida pierde tracción. El panel lo lee por pendiente, no por color.'],
+  ['ATR', 'Cuánto se mueve el precio de media en una vela. Se usa como regla: «2 ATR» es el doble del recorrido normal, así los umbrales valen igual para BTC que para una altcoin.'],
+  ['Divergencia', 'El precio y el indicador no cuentan la misma historia. Bajista: el precio marca un máximo igual o mayor pero el indicador una cresta más baja (la subida pierde fuerza). Alcista: el precio hace un mínimo más bajo pero el indicador un valle menos profundo.'],
+  ['Doble techo / doble suelo', 'El precio llega dos veces casi al mismo nivel sin superarlo: el movimiento no logra avanzar.'],
+  ['Lateral y ruptura', 'Antes de girar, las tendencias suelen pasar por un lateral. Se da por cambiada la tendencia cuando el precio rompe ese lateral con una vela fuerte, volumen y cruce de las medias, las tres cosas a la vez.'],
+  ['POC (punto de control)', 'El precio donde más volumen se ha negociado. Por encima actúa de soporte y por debajo de resistencia. Aquí se calcula aproximado a partir de las velas, no es el de tu TradingView.']
+];
+function sgGlosario() {
+  const items = SG_GLOSARIO.map(g => `<details class="sg-det sg-gl"><summary>${sgEsc(g[0])}</summary><div>${sgEsc(g[1])}</div></details>`).join('');
+  return sgCard('Glosario: ¿qué es cada cosa?', '', items +
+    '<div class="small" style="margin-top:8px;"><a href="#" onclick="sgIrConceptos();return false;">Más teoría en la pestaña Conceptos →</a></div>');
+}
+
+function sgDetalleHtml() {
+  const s = sgData.senales[sgSym];
+  if (!s) return '';
+  const tabs = SG_TFS.map(t => `<button class="sp-btn ${t[0] === sgTf ? 'active' : ''}" onclick="sgSetTf('${t[0]}')">${t[1]}</button>`).join('');
+  const a = s.tf[sgTf];
+  let h = `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:4px;">
+    <div><b style="font-size:16px;">${sgEsc(sgBase(sgSym))}</b> <span class="muted">${sgPrecio(s.precio)} $</span></div>
+    <div class="row" style="margin:0;">${tabs}</div></div>`;
+  if (!a) return h + '<div class="muted small">Sin datos para esta temporalidad.</div></div>';
+  if (a.guia && a.guia.horizonte) {
+    h += `<div class="small muted">Según tu guía, el gráfico de ${sgEsc(sgNombreTf(sgTf))} sirve para: <b>${sgEsc(a.guia.uso)}</b> (horizonte ${sgEsc(a.guia.horizonte)}). En caídas: ${sgEsc(a.guia.accion_caidas)}.</div>`;
+  }
+  h += '</div>';
+  if (!a.porques) {
+    return h + '<div class="card muted small">El bot todavía no ha publicado los datos con explicaciones. Se actualizan solos en el próximo ciclo (unos 15 minutos); también puedes lanzarlo a mano en GitHub → Actions → «Señales cripto» → Run workflow.</div>';
+  }
+  return h + sgCardNota(a) + sgCardTendencia(a) + sgCardEscenarios(a) + sgCardEstrategia(a) + sgGlosario();
+}
+
+function sgRender() {
+  const box = document.getElementById('sgContenido'), est = document.getElementById('sgEstado');
+  if (!box || !est) return;
+  if (!sgData) {
+    est.textContent = '';
+    box.innerHTML = sgFetching ? '<div class="card muted">Cargando señales…</div>'
+      : `<div class="card"><div class="red">No se pudieron cargar las señales (${sgEsc(sgError || 'sin respuesta')}).</div>
+         <div class="small muted" style="margin-top:6px;">Comprueba tu conexión o que el workflow «Señales cripto» haya publicado datos en la rama signals-data de GitHub.</div></div>`;
+    return;
+  }
+  const min = Math.max(0, Math.round((Date.now() - Date.parse(sgData.generado)) / 60000));
+  const viejo = min > 45;
+  est.innerHTML = (sgFetching ? 'Actualizando… · ' : '') +
+    `<span class="${viejo ? 'red' : ''}">Datos de hace ${min < 90 ? min + ' min' : sgNum(min / 60, 1) + ' h'}${viejo ? ' (el bot parece parado)' : ''}</span>` +
+    (sgError ? ` · <span class="red">no se pudo actualizar (${sgEsc(sgError)})</span>` : '');
+  box.innerHTML = sgResumenHtml() + sgDetalleHtml();
+}
+
 </script>
 </body>
 </html>
