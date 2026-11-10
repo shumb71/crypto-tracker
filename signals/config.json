@@ -1,9 +1,30 @@
 {
   "_ayuda": "Añade o quita pares en 'symbols' (formato Binance, p. ej. SOLUSDT). El resto son ajustes finos.",
-  "symbols": ["BTCUSDT", "ETHUSDT"],
-  "timeframes": { "1h": 0.10, "4h": 0.20, "1d": 0.35, "1w": 0.35 },
-  "umbral_fuerte": 0.50,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "timeframes": {
+    "1h": 0.1,
+    "4h": 0.2,
+    "1d": 0.35,
+    "1w": 0.35
+  },
+  "umbral_fuerte": 0.5,
   "umbral_salida": 0.35,
   "min_timeframes_de_acuerdo": 3,
-  "avisar_divergencias_en": ["4h", "1d", "1w"]
+  "avisar_divergencias_en": [
+    "4h",
+    "1d",
+    "1w"
+  ],
+  "min_senales_agotamiento": 2,
+  "avisar_agotamiento_en": [
+    "4h",
+    "1d"
+  ],
+  "avisar_rupturas_en": [
+    "4h",
+    "1d"
+  ]
 }

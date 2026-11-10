@@ -102,13 +102,46 @@ def bola(score):
     return "🟢" if score >= 0.2 else "🔴" if score <= -0.2 else "🟡"
 
 
+def dec(x, n=1):
+    return f"{x:.{n}f}".replace(".", ",")
+
+
+def flecha(d):
+    return "▲" if d > 0 else "▼" if d < 0 else ""
+
+
+def fuente_div(d):
+    return "RSI + Squeeze" if d["rsi"] and d["squeeze"] else "RSI" if d["rsi"] else "Squeeze"
+
+
+def txt_tendencia(t):
+    """Estado de la tendencia en pocas palabras, para el resumen."""
+    e = t["estado"]
+    if e == "sana":
+        return f"✅ sana {flecha(t['dir'])}"
+    if e == "agotandose":
+        return f"🪫 agotándose {flecha(t['dir'])} {t['n_senales']}/4"
+    if e == "lateral":
+        return "↔️ lateral"
+    if e == "ruptura":
+        return f"💥 ruptura {flecha(t['ruptura']['dir'])}"
+    if e == "ruptura_dudosa":
+        r = t["ruptura"]
+        falta = [n for n, ok in (("vela", r["vela_atr"] >= 1.5), ("volumen", r["vol_x"] >= 1.3),
+                                 ("cruce", r["cruce"])) if not ok]
+        return f"❔ posible ruptura {flecha(r['dir'])} (falta {', '.join(falta)})"
+    return "· sin tendencia" if e == "sin_tendencia" else "· sin datos"
+
+
 def bloque(symbol, s):
     base = partir(symbol)[0]
     g = s["global"]
     out = [f"<b>{base}</b> {num(s['precio'])} $ — {bola(g['score'])} {g['etiqueta']} <b>{g['nota']}/10</b>"]
     out.append(" · ".join(f"{NOMBRE_TF[tf]} {bola(a['score'])} {a['nota']}"
                           for tf, a in s["tf"].items() if a))
-    notas = [f"divergencia {a['divergencia']['tipo']} en {NOMBRE_TF[tf]}"
+    out.append("Tendencia: " + " · ".join(f"{NOMBRE_TF[tf]} {txt_tendencia(a['tendencia'])}"
+                                         for tf, a in s["tf"].items() if a))
+    notas = [f"divergencia {a['divergencia']['tipo']} en {NOMBRE_TF[tf]} ({fuente_div(a['divergencia'])})"
              for tf, a in s["tf"].items() if a and a["divergencia"]]
     notas += [f"volatilidad comprimida en {NOMBRE_TF[tf]}"
               for tf, a in s["tf"].items() if a and a["compresion"]]
@@ -162,8 +195,10 @@ class Telegram:
 
 
 AYUDA = ("🤖 <b>Bot de señales</b>\n/estado — resumen de todas las monedas\n/ayuda — este mensaje\n\n"
-         "Reviso el mercado cada 15 minutos aprox. y te aviso solo cuando hay señal fuerte "
-         "o una divergencia nueva. La respuesta a un comando puede tardar unos minutos.")
+         "Reviso el mercado cada 15 minutos aprox. y te aviso solo cuando hay señal fuerte, "
+         "una divergencia nueva, una tendencia que se agota (2 de 4 señales) o una ruptura de "
+         "lateral confirmada (agotamiento y rupturas, en 4h y 1d). "
+         "La respuesta a un comando puede tardar unos minutos.")
 
 
 # ---------- Programa principal ----------
@@ -175,7 +210,7 @@ def calcular(cfg, ahora_ms):
         for tf in cfg["timeframes"]:
             fuente, c = velas(sym, tf, ahora_ms)
             fuentes.add(fuente)
-            por_tf[tf] = engine.analizar_tf(c)
+            por_tf[tf] = engine.analizar_tf(c, cfg.get("min_senales_agotamiento", 2))
             if tf == "1h":
                 precio = c["c"][-1]
         g = engine.combinar(por_tf, cfg["timeframes"], cfg["umbral_fuerte"],
@@ -185,9 +220,63 @@ def calcular(cfg, ahora_ms):
     return senales, sorted(fuentes)
 
 
+def motivos_agotamiento(t):
+    """Lista legible de las señales de agotamiento que se cumplen."""
+    sen, out = t["senales"], []
+    if sen["divergencia"]:
+        out.append(f"divergencia {t['divergencia']['tipo']} ({fuente_div(t['divergencia'])})")
+    if sen["doble"]:
+        out.append("doble techo" if t["dir"] > 0 else "doble suelo")
+    if sen["compresion"]:
+        out.append("EMAs 10/55 juntándose y precio aplanado en la 55")
+    if sen["adx"]:
+        out.append("ADX perdiendo fuerza")
+    return out
+
+
+def alertas_tendencia(cfg, sym, s, estado, inicializando):
+    """Avisos de agotamiento y de ruptura de lateral confirmada (solo en las temporalidades elegidas)."""
+    msgs, base = [], partir(sym)[0]
+    ag = estado.setdefault("agotamiento", {})
+    rp = estado.setdefault("rupturas", {})
+    minimo = cfg.get("min_senales_agotamiento", 2)
+    for tf in cfg.get("avisar_agotamiento_en", []):
+        a = s["tf"].get(tf)
+        if not a:
+            continue
+        t, clave = a["tendencia"], f"{sym}|{tf}"
+        prev, d, n = ag.get(clave, 0), t["dir"], t["n_senales"]
+        if t["estado"] == "agotandose":
+            nuevo = d
+        elif d == 0 or n == 0 or (prev and d != prev):
+            nuevo = 0  # se acabó el agotamiento (o cambió de sentido): se rearma
+        else:
+            nuevo = prev  # histéresis: no vuelve a avisar mientras siga a medias
+        if nuevo and nuevo != prev and not inicializando:
+            lado = "alcista" if d > 0 else "bajista"
+            msgs.append(f"🪫 <b>{base} {NOMBRE_TF[tf]}</b>: la tendencia {lado} se está agotando "
+                        f"({n}/4 señales)\n" + "\n".join("• " + m for m in motivos_agotamiento(t))
+                        + "\n\n" + bloque(sym, s))
+        ag[clave] = nuevo
+    for tf in cfg.get("avisar_rupturas_en", []):
+        a = s["tf"].get(tf)
+        r = a and a["tendencia"]["ruptura"]
+        if not r or not r["confirmada"]:
+            continue
+        clave = f"{sym}|{tf}|{r['dir']}"
+        if r["t"] > rp.get(clave, 0) + 6 * MS[tf]:  # no repite la misma ruptura
+            rp[clave] = r["t"]
+            sentido = "al alza" if r["dir"] > 0 else "a la baja"
+            msgs.append(f"💥 <b>{base} {NOMBRE_TF[tf]}</b>: ruptura confirmada {sentido} del lateral\n"
+                        f"• vela de {dec(r['vela_atr'])}× ATR · volumen {dec(r['vol_x'])}× la media · "
+                        f"cruce de EMAs 10/55\n\n" + bloque(sym, s))
+    return msgs
+
+
 def alertas(cfg, senales, estado):
     """Compara con el estado anterior y devuelve los avisos nuevos."""
     msgs = []
+    inicializando = "agotamiento" not in estado  # primera vez con esta función: sin ráfaga de avisos
     est_sym = estado.setdefault("simbolos", {})
     vistos = estado.setdefault("divergencias", {})
     for sym, s in senales.items():
@@ -215,7 +304,9 @@ def alertas(cfg, senales, estado):
                 if clave not in vistos:
                     vistos[clave] = int(time.time())
                     msgs.append(f"🔀 <b>{base}</b>: divergencia {a['divergencia']['tipo']} nueva en "
-                                f"{NOMBRE_TF[tf]} (RSI {a['rsi']}).\n\n" + bloque(sym, s))
+                                f"{NOMBRE_TF[tf]} ({fuente_div(a['divergencia'])}; RSI {dec(a['rsi'])}).\n\n"
+                                + bloque(sym, s))
+        msgs += alertas_tendencia(cfg, sym, s, estado, inicializando)
     # limpia divergencias de hace más de 60 días
     limite = time.time() - 60 * 86400
     estado["divergencias"] = {k: v for k, v in vistos.items() if v > limite}
