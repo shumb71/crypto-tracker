@@ -17,6 +17,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).parent))
 import engine  # noqa: E402
+import estrategia  # noqa: E402
 
 MS = {"1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000, "1w": 604_800_000}
 NOMBRE_TF = {"1h": "1h", "4h": "4h", "1d": "1d", "1w": "1s"}
@@ -210,7 +211,8 @@ def calcular(cfg, ahora_ms):
         for tf in cfg["timeframes"]:
             fuente, c = velas(sym, tf, ahora_ms)
             fuentes.add(fuente)
-            por_tf[tf] = engine.analizar_tf(c, cfg.get("min_senales_agotamiento", 2))
+            a = engine.analizar_tf(c, cfg.get("min_senales_agotamiento", 2))
+            por_tf[tf] = estrategia.completar(a, c, tf)  # añade porqués, escenarios y tu estrategia
             if tf == "1h":
                 precio = c["c"][-1]
         g = engine.combinar(por_tf, cfg["timeframes"], cfg["umbral_fuerte"],

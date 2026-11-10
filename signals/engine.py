@@ -11,6 +11,11 @@ PESOS = {"tendencia": 0.35, "estructura": 0.15, "momento": 0.25,
          "divergencia": 0.15, "volumen": 0.10}
 
 
+def _r(x):
+    """Redondeo corto (8 cifras significativas) para guardar números en el JSON."""
+    return float(f"{x:.8g}")
+
+
 def clamp(x, lo=-1.0, hi=1.0):
     return max(lo, min(hi, x))
 
@@ -98,10 +103,11 @@ def divergencia(candles, rsi_vals, k=5, max_sep=60, reciente=20):
         ra, rb = rsi_vals[a], rsi_vals[b]
         if ra is None or rb is None:
             continue
+        det = {"p": [_r(serie[a]), _r(serie[b])], "i": [_r(ra), _r(rb)]}
         if tipo == "alcista" and serie[b] < serie[a] and rb > ra + 1 and ra < 50:
-            found.append({"tipo": tipo, "t": candles["t"][b]})
+            found.append({"tipo": tipo, "t": candles["t"][b], **det})
         if tipo == "bajista" and serie[b] > serie[a] and rb < ra - 1 and ra > 50:
-            found.append({"tipo": tipo, "t": candles["t"][b]})
+            found.append({"tipo": tipo, "t": candles["t"][b], **det})
     if not found:
         return None
     return max(found, key=lambda d: d["t"])  # la más reciente
@@ -244,11 +250,13 @@ def divergencia_squeeze(candles, hist, atr_v, k=5, max_sep=60, reciente=20):
         if tipo == "bajista":
             pa, pb = max(va), max(vb)
             if serie[b] >= serie[a] - 0.25 * atr_v and pa > 0 and 0 < pb < 0.85 * pa:
-                found.append({"tipo": tipo, "t": candles["t"][b]})
+                found.append({"tipo": tipo, "t": candles["t"][b],
+                              "p": [_r(serie[a]), _r(serie[b])], "i": [_r(pa), _r(pb)]})
         else:
             pa, pb = min(va), min(vb)
             if serie[b] <= serie[a] + 0.25 * atr_v and pa < 0 and 0 > pb > 0.85 * pa:
-                found.append({"tipo": tipo, "t": candles["t"][b]})
+                found.append({"tipo": tipo, "t": candles["t"][b],
+                              "p": [_r(serie[a]), _r(serie[b])], "i": [_r(pa), _r(pb)]})
     return max(found, key=lambda d: d["t"]) if found else None
 
 
@@ -259,7 +267,8 @@ def combinar_div(div_rsi, div_sq):
     base = div_rsi or div_sq
     if not base:
         return None
-    return {"tipo": base["tipo"], "rsi": bool(div_rsi), "squeeze": bool(div_sq), "t": base["t"]}
+    return {"tipo": base["tipo"], "rsi": bool(div_rsi), "squeeze": bool(div_sq), "t": base["t"],
+            "det": {"rsi": div_rsi, "squeeze": div_sq}}
 
 
 def tendencia_previa(e10, e55, atr_v, ventana=80, umbral=1.5, pico_min=3.0):
@@ -297,7 +306,8 @@ def dobles(candles, e10, e55, atr_v, k=5):
         ext = max(serie[a:]) if d == 1 else min(serie[a:])
         if d * (ext - serie[a]) > 0.25 * atr_v:
             continue  # ya lo ha superado: deja de ser un doble techo/suelo
-        res[d] = {"tipo": "doble_techo" if d == 1 else "doble_suelo", "t": candles["t"][b]}
+        res[d] = {"tipo": "doble_techo" if d == 1 else "doble_suelo", "t": candles["t"][b],
+                  "p": [_r(serie[a]), _r(serie[b])]}
     return res
 
 
@@ -307,17 +317,23 @@ def medias_juntas(e10, e55, c, atr_v, pico):
     return pico >= 2.5 and sep <= 0.4 * pico and abs(c[-1] - e55[-1]) <= 1.0 * atr_v
 
 
-def adx_cede(adxs, h, l, c, d, atr_v):
-    """ADX girando a la baja (-0,5 en 3 velas y 3 puntos bajo su pico) mientras el precio
-    sigue cerca del extremo de la tendencia."""
+def adx_detalle(adxs, h, l, c, d, atr_v):
+    """Desglose de la señal «ADX cediendo»: pico reciente, si cae y a cuántos ATR del extremo está el precio."""
     ult = [x for x in adxs[-40:] if x is not None]
     if len(ult) < 10 or adxs[-1] is None or adxs[-4] is None:
-        return False
+        return {"ok": False, "pico": None, "cae": False, "cerca": False, "dist": None}
     pico = max(ult)
-    if pico < 25 or adxs[-1] > adxs[-4] - 0.5 or adxs[-1] > pico - 3:
-        return False
+    cae = pico >= 25 and adxs[-1] <= adxs[-4] - 0.5 and adxs[-1] <= pico - 3
     extremo = max(h[-20:]) if d == 1 else min(l[-20:])
-    return d * (extremo - c[-1]) <= 1.5 * atr_v
+    dist = d * (extremo - c[-1]) / atr_v
+    cerca = dist <= 1.5
+    return {"ok": bool(cae and cerca), "pico": pico, "cae": bool(cae), "cerca": bool(cerca), "dist": dist}
+
+
+def adx_cede(adxs, h, l, c, d, atr_v):
+    """ADX girando a la baja (-0,5 en 3 velas y 3 puntos bajo su pico, con pico de al menos 25)
+    mientras el precio sigue a menos de 1,5 ATR del extremo de la tendencia."""
+    return adx_detalle(adxs, h, l, c, d, atr_v)["ok"]
 
 
 def es_lateral(adxs, e10, e55, h, l, atr_v):

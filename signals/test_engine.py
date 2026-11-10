@@ -139,7 +139,9 @@ assert not t["senales"]["doble"]
 
 # --- Combinación de divergencias: una sola señal, más fiable si coinciden; si se contradicen, ninguna
 r_, s_ = {"tipo": "bajista", "t": 5}, {"tipo": "bajista", "t": 7}
-assert engine.combinar_div(r_, s_) == {"tipo": "bajista", "rsi": True, "squeeze": True, "t": 5}
+cd_ = engine.combinar_div(r_, s_)
+assert (cd_["tipo"], cd_["rsi"], cd_["squeeze"], cd_["t"]) == ("bajista", True, True, 5)
+assert cd_["det"]["rsi"] is r_ and cd_["det"]["squeeze"] is s_
 assert engine.combinar_div(None, s_)["squeeze"] and not engine.combinar_div(None, s_)["rsi"]
 assert engine.combinar_div(r_, {"tipo": "alcista", "t": 7}) is None
 
@@ -220,4 +222,131 @@ assert not any("ruptura confirmada" in x for x in run.alertas(cfg, forzar(sen, "
 txt = run.resumen(forzar(sen, "4h", **agot), __import__("datetime").datetime.now(__import__("datetime").timezone.utc))
 assert "Tendencia:" in txt and "agotándose ▲ 3/4" in txt, txt
 print(txt.split("\n\n")[1])
+
+# =========================== Explicaciones y estrategia ===========================
+import estrategia as ES
+
+# --- formato y utilidades
+assert ES.eu(1234.5) == "1.234,5" and ES.pr(73216.01) == "73.216" and ES.pr(2024.22) == "2.024,2"
+assert ES.pr(0.43219) == "0,43219" and ES.cap("EMA 50 sube") == "EMA 50 sube" and ES.cap("ema") == "Ema"
+assert ES.color_squeeze(-2, -1) is not None
+assert ES.color_squeeze(2, 1).startswith("verde oscuro") and ES.color_squeeze(1, 2).startswith("verde claro")
+assert ES.color_squeeze(-1, -2).startswith("rojo claro") and ES.color_squeeze(-2, -1).startswith("rojo oscuro")
+assert ES.color_squeeze(None, 1) is None
+
+# --- POC aproximado: cae donde se concentra el volumen
+v_poc = dict(t=list(range(100)), o=[105.0] * 100, c=[105.0] * 100, h=[110.0] * 100, l=[100.0] * 100, v=[100.0] * 100)
+for i in range(40, 45):
+    v_poc["h"][i], v_poc["l"][i], v_poc["v"][i] = 105.0, 104.0, 5000.0
+assert 104.0 <= ES.poc_aproximado(v_poc) <= 105.0
+assert ES.poc_aproximado(dict(h=[5.0] * 100, l=[5.0] * 100, v=[1.0] * 100)) is None   # sin recorrido, no hay perfil
+
+# --- posición en el rango
+pos, lo_, hi_, nom = ES.posicion_rango(velas_de([100 + i for i in range(80)]))
+assert nom == "alta" and pos > 0.9
+pos, lo_, hi_, nom = ES.posicion_rango(velas_de([200 - i for i in range(80)]))
+assert nom == "baja" and pos < 0.1
+
+# --- completar(): estructura, coherencia con la nota y JSON válido
+def completo(cd, tf="4h"):
+    a = engine.analizar_tf(cd)
+    return ES.completar(a, cd, tf), ES.series(cd)
+
+cd = techo(11, 1.000)
+a, S = completo(cd)
+json.dumps(a)
+assert {"porques", "tendencia_explicada", "escenarios", "estrategia", "guia"} <= set(a)
+assert len(a["porques"]["bloques"]) == 5
+assert abs(sum(b["aporta"] for b in a["porques"]["bloques"]) - a["score"]) < 0.02      # los porqués suman la nota
+textos = " ".join(b["texto"] for b in a["porques"]["bloques"])
+assert "ema 50" not in textos and "squeeze" not in textos                                # sin minúsculas indebidas
+assert "Squeeze" in textos and "máximo" in textos                                        # explica la divergencia con números
+te = a["tendencia_explicada"]
+assert te["estado"] == a["tendencia"]["estado"] == "agotandose" and te["resumen"]
+assert {x["id"]: x["ok"] for x in te["senales"]} == a["tendencia"]["senales"]           # misma verdad que el motor
+assert all(x["texto"] and x["regla"] and x["donde"] for x in te["senales"])
+assert a["guia"]["horizonte"] == "24 a 48 horas" and completo(cd, "1w")[0]["guia"]["horizonte"] == "3 a 6 meses"
+
+# --- el ADX explica por qué no cuenta cuando cae pero el precio ya se alejó del extremo
+adx_txt = next(x["texto"] for x in te["senales"] if x["id"] == "adx")
+dt = engine.adx_detalle(S["adx"], cd["h"], cd["l"], cd["c"], 1, S["atr"][-1])
+assert dt["ok"] == a["tendencia"]["senales"]["adx"] == engine.adx_cede(S["adx"], cd["h"], cd["l"], cd["c"], 1, S["atr"][-1])
+if dt["cae"] and not dt["cerca"]:
+    assert "ya está a" in adx_txt
+
+# --- entrada, zonas, salida y checklist: coherentes con los indicadores en bruto
+def comprobar_estrategia(cd, tf="4h"):
+    a, S = completo(cd, tf)
+    st = a["estrategia"]
+    e = {i["id"]: i["ok"] for i in st["entrada_long"]["items"]}
+    assert e["adx"] == (S["adx"][-1] < S["adx"][-3])
+    assert e["squeeze"] == (S["sq"][-1] < 0 and S["sq"][-1] > S["sq"][-2])
+    z = {i["id"]: i["activa"] for i in st["zonas_no_operables"]["items"]}
+    pos, _, _, nombre = ES.posicion_rango(cd)
+    assert z["media"] == (a["tendencia"]["estado"] == "lateral" and nombre == "media")
+    assert z["cuchillo"] == (cd["c"][-1] < cd["c"][-6] and S["adx"][-1] - S["adx"][-3] > 0)
+    assert st["zonas_no_operables"]["activas"] == sum(z.values())
+    ch = {i["id"]: i for i in st["checklist"]["items"]}
+    assert (ch["estructura"]["ok"], ch["monitor"]["ok"], ch["adx"]["ok"]) == (e["precio"], e["squeeze"], e["adx"])
+    assert ch["zona"]["ok"] == (st["zonas_no_operables"]["activas"] == 0)
+    assert ch["riesgo"]["manual"] and ch["capital"]["manual"] and ch["riesgo"]["ok"] is None
+    assert st["entrada_long"]["cumple"] == sum(1 for v_ in e.values() if v_) and st["entrada_long"]["total"] == 4
+    assert all(i["texto"] for g in ("entrada_long", "salida") for i in st[g]["items"])
+    return a, st, e, z
+
+random.seed(21); fuerte = velas_de(ruido(100, 200, 0.004, 0.003))
+a, st, e, z = comprobar_estrategia(fuerte)
+assert z["topado"] and not e["precio"]                       # tras un subidón: topado y lejos de la EMA 55
+assert {i["id"]: i["ok"] for i in st["salida"]["items"]}["alta"]
+random.seed(22); comprobar_estrategia(velas_de(ruido(100, 200, -0.004, 0.003)))
+for n_lat in range(140, 160, 3):
+    c_ = [100 * (1 + 0.006 * math.sin(2 * math.pi * i / 14)) for i in range(n_lat)]
+    comprobar_estrategia(velas_de(c_))
+# alguna fase del lateral deja el precio en el centro (zona activa) y otra no
+fases = []
+for n_lat in range(140, 154):
+    c_ = [100 * (1 + 0.006 * math.sin(2 * math.pi * i / 14)) for i in range(n_lat)]
+    fases.append(comprobar_estrategia(velas_de(c_))[3]["media"])
+assert any(fases) and not all(fases), fases
+
+# el divergencia bajista de la salida exige el Squeeze (la del RSI sola no vale)
+a11, st11, *_ = comprobar_estrategia(techo(11, 1.000))
+a12, st12, *_ = comprobar_estrategia(techo(12, 1.000))
+s11 = next(i for i in st11["salida"]["items"] if i["id"] == "divergencia")
+s12 = next(i for i in st12["salida"]["items"] if i["id"] == "divergencia")
+assert s11["ok"] and not s12["ok"] and "solo la ve el RSI" in s12["texto"]
+
+# --- escenarios con niveles concretos
+cd_l, t_l = lateral_y_ruptura(150, 0.0, 1000, tras=0)[0], None
+c_lat = velas_de([100 * (1 + 0.006 * math.sin(2 * math.pi * i / 14)) for i in range(150)])
+a_l, S_l = completo(c_lat)
+assert a_l["tendencia"]["estado"] == "lateral"
+esc = a_l["escenarios"]
+assert any(x["tipo"] == "confirma" and ES.pr(max(c_lat["h"][-20:])) in x["cuando"] for x in esc)
+assert any(x["tipo"] == "confirma" and ES.pr(min(c_lat["l"][-20:])) in x["cuando"] for x in esc)
+assert a11["tendencia"]["estado"] == "agotandose" and {x["tipo"] for x in a11["escenarios"]} == {"confirma", "anula"}
+a_sana = completo(velas_de(ruido(100, 195, 0.004, 0.003)))[0]
+assert a_sana["tendencia"]["estado"] == "sana" and {x["tipo"] for x in a_sana["escenarios"]} == {"vigila", "debilita"}
+cd_r, t_r = lateral_y_ruptura(148, 0.03, 1000)             # ruptura sin volumen
+a_r = completo(cd_r)[0]
+assert a_r["tendencia"]["estado"] == "ruptura_dudosa" and "Falta: volumen" in a_r["tendencia_explicada"]["resumen"]
+assert any("más volumen" in x["cuando"] for x in a_r["escenarios"])
+cd_r2, _ = lateral_y_ruptura(148, 0.03, 2800)
+assert "ruptura confirmada" in completo(cd_r2)[0]["tendencia_explicada"]["resumen"]
+
+# --- pocas velas: los porqués funcionan y lo demás se declara sin datos
+a_c, _ = completo(velas_de(ruido(100, 100, 0.003, 0.002)))
+assert a_c["estrategia"] is None and a_c["escenarios"] == [] and a_c["tendencia_explicada"]["estado"] == "sin_datos"
+assert len(a_c["porques"]["bloques"]) == 5
+
+# --- integrado en run.calcular: todo llega a signals.json y es serializable
+run.FUENTES = [("falsa", falsa(0.004))]
+sen, _ = run.calcular(cfg, ahora)
+for tf_, a_ in sen["BTCUSDT"]["tf"].items():
+    assert {"porques", "tendencia_explicada", "escenarios", "estrategia", "guia"} <= set(a_), tf_
+assert sen["BTCUSDT"]["tf"]["1w"]["guia"]["horizonte"] == "3 a 6 meses"
+tam = len(json.dumps(sen, ensure_ascii=False))
+print("tamaño de signals.json de prueba (2 monedas):", tam, "bytes")
+assert tam < 250_000
+
 print("\nTODO OK")
