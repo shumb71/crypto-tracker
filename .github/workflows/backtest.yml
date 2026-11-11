@@ -1,0 +1,58 @@
+name: Backtest de señales
+
+# Se lanza a mano (Actions → Backtest de señales → Run workflow). Tarda unos 20 minutos.
+# No envía nada a Telegram ni toca las señales en vivo: solo lee histórico público de Binance.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/backtest']
+    paths: ['signals/backtest*.py', '.github/workflows/backtest.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backtest
+  cancel-in-progress: true
+
+jobs:
+  backtest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Descargar histórico
+        run: python signals/backtest.py --descargar --datos out/datos
+
+      - name: Publicar el histórico (rama backtest-data)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git init -q -b backtest-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Histórico $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" backtest-data
+
+      - name: Simular y medir
+        run: python signals/backtest.py --datos out/datos --out out
+
+      - name: Probar variantes de umbrales
+        run: python signals/backtest_umbrales.py --dir out
+
+      - name: Publicar resultados (rama backtest-data)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git add -A
+          git commit -q -m "Backtest $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" backtest-data
+          cat informe.md umbrales.md >> "$GITHUB_STEP_SUMMARY"
