@@ -164,7 +164,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.7</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.8</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -279,6 +279,7 @@ tr:last-child td { border-bottom: none; }
       <div class="small muted" id="sgEstado" style="margin-top:4px;"></div>
       <div class="small muted" style="margin-top:4px;">Lectura automática de 1h, 4h, 1d y 1s con tu estrategia, explicada paso a paso. Es una ayuda para aprender y revisar, no una recomendación de compra o venta.</div>
     </div>
+    <div id="sgToken"></div>
     <div id="sgContenido"></div>
   </div>
 
@@ -2464,7 +2465,22 @@ function sgDetalleHtml() {
   return h + sgCardNota(a) + sgCardTendencia(a) + sgCardEscenarios(a) + sgCardEstrategia(a) + sgGlosario();
 }
 
+// Aviso de renovación del token de GitHub que usa cron-job.org (caduca el 10/11/2027)
+const SG_TOKEN_CADUCA = new Date(2027, 10, 10);
+function sgAvisoToken() {
+  const el = document.getElementById('sgToken');
+  if (!el) return;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const dias = Math.round((SG_TOKEN_CADUCA - hoy) / 86400000);
+  if (dias > 15) { el.innerHTML = ''; return; }
+  const msg = dias > 0 ? 'El token de GitHub del cron caduca en ' + dias + ' día' + (dias === 1 ? '' : 's') + ' (10/11/2027).'
+    : dias === 0 ? 'El token de GitHub del cron caduca hoy.' : 'El token de GitHub del cron caducó el 10/11/2027.';
+  el.innerHTML = '<div class="concepto-alerta" style="margin:0 0 12px;"><b>Renueva el token.</b> ' + msg +
+    ' Crea uno nuevo en GitHub (Settings → Developer settings → Fine-grained tokens, solo este repositorio, permiso Actions: Read and write) y cámbialo en la cabecera Authorization de cron-job.org. Sin él, el bot vuelve a depender del cron de GitHub, que se retrasa horas.</div>';
+}
+
 function sgRender() {
+  sgAvisoToken();
   const box = document.getElementById('sgContenido'), est = document.getElementById('sgEstado');
   if (!box || !est) return;
   if (!sgData) {
