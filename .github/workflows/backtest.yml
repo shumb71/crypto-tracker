@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: ['claude/backtest']
-    paths: ['signals/backtest.py', '.github/workflows/backtest.yml']
+    paths: ['signals/backtest*.py', '.github/workflows/backtest.yml']
 
 permissions:
   contents: write
@@ -44,6 +44,9 @@ jobs:
       - name: Simular y medir
         run: python signals/backtest.py --datos out/datos --out out
 
+      - name: Probar variantes de umbrales
+        run: python signals/backtest_umbrales.py --dir out
+
       - name: Publicar resultados (rama backtest-data)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,4 +55,4 @@ jobs:
           git add -A
           git commit -q -m "Backtest $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" backtest-data
-          cat informe.md >> "$GITHUB_STEP_SUMMARY"
+          cat informe.md umbrales.md >> "$GITHUB_STEP_SUMMARY"

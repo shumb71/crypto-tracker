@@ -147,6 +147,19 @@ def guardar_filas(ruta, filas, horizontes=HORIZONTES):
             w.writerow(["" if f.get(k) is None else f.get(k) for k in cols])
 
 
+def leer_filas(ruta):
+    """Lee un filas_*.csv.gz ya simulado (para probar variantes sin repetir la simulación)."""
+    texto = {"estado"}
+    out = []
+    with gzip.open(ruta, "rt", newline="") as fh:
+        for j, r in enumerate(csv.DictReader(fh)):
+            f = {k: (v if k in texto else None if v == "" and k.startswith("r") and k[1:].isdigit()
+                     else "" if v == "" else float(v) if "." in v or "e" in v else int(v)) for k, v in r.items()}
+            f["i"] = j
+            out.append(f)
+    return out
+
+
 # ----------------------------------------------------------------- señales a evaluar
 # Cada señal: (id, título, función fila -> sentido esperado del precio: +1 sube, -1 baja, 0 no hay señal)
 
@@ -225,9 +238,8 @@ def evaluar(series, fn, k, rng, n_azar=N_AZAR, tramo=None):
         r = [f.get(f"r{k}") for f in filas]
         m = len(filas)
         lo, hi = (0, m) if tramo is None else (0, int(CORTE * m)) if tramo == "in" else (int(CORTE * m), m)
-        datos.append((ini, r, lo, hi))
-    obs = [s * r[j] for ini, r, lo, hi in datos for j, s in enumerate(ini)
-           if s and lo <= j < hi and r[j] is not None]
+        datos.append(([(j, s) for j, s in enumerate(ini) if s and lo <= j < hi], r, lo, hi))
+    obs = [s * r[j] for ev, r, lo, hi in datos for j, s in ev if r[j] is not None]
     res = _resumen(obs)
     if res["n"] < 5:
         return res
@@ -235,17 +247,15 @@ def evaluar(series, fn, k, rng, n_azar=N_AZAR, tramo=None):
     medias = []
     for _ in range(n_azar):
         vals = []
-        for ini, r, lo, hi in datos:
+        for ev, r, lo, hi in datos:
             ancho = hi - lo
             if ancho < 50:
                 continue
             d = rng.randrange(1, ancho)
-            for j in range(lo, hi):
-                s = ini[j]
-                if s:
-                    x = r[lo + (j - lo + d) % ancho]
-                    if x is not None:
-                        vals.append(s * x)
+            for j, s in ev:
+                x = r[lo + (j - lo + d) % ancho]
+                if x is not None:
+                    vals.append(s * x)
         if vals:
             medias.append(mean(vals))
     if medias:
