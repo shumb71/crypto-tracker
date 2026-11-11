@@ -72,9 +72,11 @@ for s, sem in (("AAA", 5), ("BBB", 9)):
         x = velas(n, sem + len(tf) + n, MS[tf])
         fin = 2600 * MS["1h"]
         x["t"] = [fin - (n - i) * MS[tf] for i in range(n)]   # todas acaban a la vez
-        paso = 4 if tf == "1h" else 1
-        desde = next(i for i in range(130, 140) if (x["t"][i - 1] + MS["1h"]) % MS["4h"] == 0) if tf == "1h" else 130
-        por_serie[(s, tf)], vv[(s, tf)] = B.futuros(x, B.simular(x, paso, desde)), x
+        if tf == "1h":   # con un hueco de 3 h en los datos, como pasa en Binance, sigue alineado a los cierres de 4h
+            for k in "tohlcv":
+                del x[k][1000:1003]
+        solo = (lambda i, t=x["t"]: (t[i] + MS["1h"]) % MS["4h"] == 0) if tf == "1h" else None
+        por_serie[(s, tf)], vv[(s, tf)] = B.futuros(x, B.simular(x, solo)), x
 assert all((f["t"] + MS["1h"]) % MS["4h"] == 0 for f in por_serie[("AAA", "1h")])
 res = {"por_tf": B.analizar({k: f for k, f in por_serie.items() if k[1] != "1h"}, n_azar=40)}
 assert list(res["por_tf"]) == ["4h", "1d", "1w"] and set(res["por_tf"]["4h"]["senales"]) == {s[0] for s in B.SENALES}

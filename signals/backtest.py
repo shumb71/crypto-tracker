@@ -108,10 +108,13 @@ def fila(a, st):
     return f
 
 
-def simular(velas, paso=1, desde=130, progreso=None):
-    """Una fila por vela (cada `paso` velas), sin mirar nunca más allá de la vela evaluada."""
+def simular(velas, solo=None, desde=130, progreso=None):
+    """Una fila por vela, sin mirar nunca más allá de la vela evaluada.
+    `solo`: función índice -> bool para evaluar solo algunas velas (p. ej. los cierres de 4h en 1h)."""
     n, out = len(velas["c"]), []
-    for i in range(desde - 1, n, paso):
+    for i in range(desde - 1, n):
+        if solo and not solo(i):
+            continue
         w = {k: velas[k][max(0, i - VENTANA + 1):i + 1] for k in "tohlcv"}
         a = engine.analizar_tf(w)
         if not a:
@@ -156,6 +159,7 @@ def _n(f, k):
 
 
 SENALES = [
+    ("sana", "Tendencia «sana» (se espera que siga)", lambda f: f["dir"] if f["estado"] == "sana" else 0),
     ("agot", "Tendencia «agotándose» (≥2 de 4 señales)", lambda f: -f["dir"] if f["estado"] == "agotandose" else 0),
     ("agot3", "Agotamiento con ≥3 de 4 señales", lambda f: -f["dir"] if f["estado"] == "agotandose" and f["n_sen"] >= 3 else 0),
     ("agot1", "Al menos 1 señal de agotamiento", lambda f: -f["dir"] if _tend(f) and f["n_sen"] >= 1 else 0),
@@ -401,13 +405,10 @@ def main():
             if not ruta.exists():
                 continue
             v = leer_velas(ruta)
-            # En 1h solo hace falta la nota en cada cierre de 4h (para la señal global): 1 de cada 4 velas
-            paso = 4 if tf == "1h" else 1
-            desde = 130
-            if tf == "1h":  # alinea con los cierres de 4h
-                desde = next(i for i in range(130, 140) if (v["t"][i - 1] + run.MS["1h"]) % run.MS["4h"] == 0)
+            # En 1h solo hace falta la nota en cada cierre de 4h (para la señal global)
+            solo = (lambda i, t=v["t"]: (t[i] + run.MS["1h"]) % run.MS["4h"] == 0) if tf == "1h" else None
             t0 = time.time()
-            filas = futuros(v, simular(v, paso, desde, lambda k: print(f"  {sym} {tf}: {k} velas…", flush=True)))
+            filas = futuros(v, simular(v, solo, 130, lambda k: print(f"  {sym} {tf}: {k} velas…", flush=True)))
             por_serie[(sym, tf)], velas[(sym, tf)] = filas, v
             guardar_filas(out / f"filas_{sym}_{tf}.csv.gz", filas)
             print(f"{sym} {tf}: {len(filas)} filas en {time.time() - t0:.0f} s", flush=True)
