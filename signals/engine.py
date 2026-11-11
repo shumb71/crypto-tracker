@@ -434,16 +434,16 @@ def analizar_tf(candles, min_agotamiento=2):
     c, h, l, v = candles["c"], candles["h"], candles["l"], candles["v"]
     if len(c) < 60:
         return None
-    e50, e200 = ema(c, 50), ema(c, 200)
+    e55, e200 = ema(c, 55), ema(c, 200)
     r = rsi(c)
     line, s, hist = macd(c)
 
-    # Tendencia: precio vs EMA50, EMA50 vs EMA200, pendiente de la EMA50
-    t = [sign(c[-1] - e50[-1])]
+    # Tendencia: precio vs EMA55, EMA55 vs EMA200, pendiente de la EMA55
+    t = [sign(c[-1] - e55[-1])]
     if e200[-1] is not None:
-        t.append(sign(e50[-1] - e200[-1]))
-    if e50[-6] is not None:
-        t.append(sign(e50[-1] - e50[-6]))
+        t.append(sign(e55[-1] - e200[-1]))
+    if e55[-6] is not None:
+        t.append(sign(e55[-1] - e55[-6]))
     tendencia = mean(t)
 
     # Momento: RSI centrado en 50 + MACD (cruce y dirección del histograma)
@@ -476,7 +476,7 @@ def analizar_tf(candles, min_agotamiento=2):
         "nota": nota(score),
         "componentes": {k: round(x, 2) for k, x in comp.items()},
         "rsi": round(r[-1], 1),
-        "ema50": e50[-1], "ema200": e200[-1],
+        "ema55": e55[-1], "ema200": e200[-1],
         "atr_pct": round(100 * a / c[-1], 2) if a else None,
         "divergencia": div,
         "tendencia": tend,

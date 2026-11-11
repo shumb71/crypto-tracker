@@ -64,7 +64,7 @@ def lado(d):
 
 def series(candles):
     h, l, c = candles["h"], candles["l"], candles["c"]
-    return {"e10": engine.ema(c, 10), "e50": engine.ema(c, 50), "e55": engine.ema(c, 55),
+    return {"e10": engine.ema(c, 10), "e55": engine.ema(c, 55),
             "e200": engine.ema(c, 200), "adx": engine.adx(h, l, c), "sq": engine.squeeze_hist(h, l, c),
             "atr": engine.atr_serie(h, l, c), "rsi": engine.rsi(c), "macd": engine.macd(c)[2]}
 
@@ -142,19 +142,19 @@ def porques(a, candles, S):
         bloques.append({"id": id_, "titulo": titulo, "valor": comp[id_], "peso": peso,
                         "aporta": round(comp[id_] * peso, 3), "texto": texto, "donde": donde})
 
-    # Tendencia de fondo: EMA 50 / EMA 200
-    e50, e200 = S["e50"], S["e200"]
-    t = [f"el precio ({pr(c[-1])}) está {'por encima' if c[-1] > e50[-1] else 'por debajo'} de la EMA 50 ({pr(e50[-1])})"]
-    t.append(f"la EMA 50 está {'por encima' if e50[-1] > e200[-1] else 'por debajo'} de la EMA 200 ({pr(e200[-1])})"
+    # Tendencia de fondo: EMA 55 / EMA 200
+    e55, e200 = S["e55"], S["e200"]
+    t = [f"el precio ({pr(c[-1])}) está {'por encima' if c[-1] > e55[-1] else 'por debajo'} de la EMA 55 ({pr(e55[-1])})"]
+    t.append(f"la EMA 55 está {'por encima' if e55[-1] > e200[-1] else 'por debajo'} de la EMA 200 ({pr(e200[-1])})"
              if e200[-1] is not None else "aún no hay velas para calcular la EMA 200")
-    if e50[-6] is not None:
-        t.append("la EMA 50 " + ("sube" if e50[-1] > e50[-6] else "baja"))
+    if e55[-6] is not None:
+        t.append("la EMA 55 " + ("sube" if e55[-1] > e55[-6] else "baja"))
     v_ = comp["tendencia"]
     concl = ("mandan los compradores" if v_ >= 0.5 else "mandan los vendedores" if v_ <= -0.5
              else "las señales van mezcladas")
     bloque("tendencia", "Tendencia de fondo", f"{cap(t[0])}; " + "; ".join(t[1:]) + f". Conclusión: {concl}.",
-           "Pon las EMA 50 y 200 en el gráfico. Ojo: tu guía usa las EMA 10 y 55, que miden otra cosa "
-           "(si la tendencia se agota) y se explican en «Estado de la tendencia».")
+           "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, "
+           "para ver si la tendencia se agota: mira «Estado de la tendencia».")
 
     # Estructura de máximos y mínimos
     ph, pl = engine.pivots(h, 5, "high"), engine.pivots(l, 5, "low")
