@@ -66,6 +66,11 @@ tr:last-child td { border-bottom: none; }
 .ticker-sym { font-size: 11px; color: #888; font-weight: 500; }
 .ticker-price { font-size: 15px; font-weight: 500; margin: 3px 0 2px; }
 .ticker-chg { font-size: 12px; }
+.fng-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.fng-val { font-size: 34px; font-weight: 600; line-height: 1; min-width: 56px; }
+.fng-lbl { font-size: 14px; font-weight: 500; }
+.fng-sub { font-size: 12px; color: #888; margin-top: 2px; }
+.fng-spark { margin-left: auto; }
 .sym-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
 .sym-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 99px; font-size: 12px; cursor: pointer; }
 .sym-chip:hover { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
@@ -164,7 +169,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.8</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.9</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -194,6 +199,7 @@ tr:last-child td { border-bottom: none; }
         <button onclick="addSymbol()"><i class="ti ti-plus"></i> Añadir</button>
       </div>
     </div>
+    <div id="fngCard"></div>
     <div class="ticker-grid" id="tickerGrid"></div>
   </div>
 
@@ -397,6 +403,55 @@ function showSection(id, btn) {
   if (id === 'sp500') renderSP500();
   if (id === 'senales') renderSenales();
   if (id === 'operaciones') { renderOpsTable(); populateSymSelects(); }
+}
+
+// ===================== Índice Miedo y Codicia (alternative.me) =====================
+let fngData = null;
+function fngInfo(v) {
+  if (v < 25) return { t: 'Miedo extremo', c: '#b91c1c' };
+  if (v < 45) return { t: 'Miedo', c: '#ea580c' };
+  if (v <= 55) return { t: 'Neutral', c: '#6b7280' };
+  if (v <= 75) return { t: 'Codicia', c: '#65a30d' };
+  return { t: 'Codicia extrema', c: '#15803d' };
+}
+async function fetchFng() {
+  try {
+    const res = await fetch('https://api.alternative.me/fng/?limit=30');
+    const j = await res.json();
+    const arr = (j.data || []).map(d => ({ v: parseInt(d.value, 10), ts: parseInt(d.timestamp, 10) * 1000 })).filter(d => !isNaN(d.v)).reverse();
+    if (!arr.length) throw new Error('sin datos');
+    fngData = arr;
+  } catch (e) {
+    fngData = null;
+  }
+  renderFng();
+}
+function renderFng() {
+  const el = document.getElementById('fngCard');
+  if (!el) return;
+  if (!fngData) {
+    el.innerHTML = '<div class="fng-card"><div class="fng-sub">Miedo y Codicia: no disponible ahora mismo</div></div>';
+    return;
+  }
+  const last = fngData[fngData.length - 1];
+  const prev = fngData.length > 1 ? fngData[fngData.length - 2] : null;
+  const info = fngInfo(last.v);
+  const diff = prev ? last.v - prev.v : 0;
+  const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '=';
+  const fecha = new Date(last.ts).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const W = 160, H = 44, n = fngData.length;
+  const pts = fngData.map((d, i) => `${(n > 1 ? i * W / (n - 1) : W).toFixed(1)},${(H - d.v / 100 * H).toFixed(1)}`).join(' ');
+  el.innerHTML = `<div class="fng-card">
+    <div class="fng-val" style="color:${info.c}">${last.v}</div>
+    <div>
+      <div class="fng-lbl" style="color:${info.c}">${info.t}</div>
+      <div class="fng-sub">Miedo y Codicia (cripto) · ${arrow} ${prev ? (diff > 0 ? '+' : '') + diff + ' vs ayer' : ''} · ${fecha}</div>
+    </div>
+    <svg class="fng-spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-label="Últimos 30 días">
+      <line x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}" stroke="#e5e7eb" stroke-dasharray="3 3"/>
+      <polyline points="${pts}" fill="none" stroke="${info.c}" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+  </div>`;
 }
 
 async function fetchPrices() {
@@ -2233,6 +2288,8 @@ populateSymSelects();
 renderOpsTable();
 fetchPrices();
 setInterval(fetchPrices, 15000);
+fetchFng();
+setInterval(fetchFng, 3600000);
 
 // ===================== SEÑALES: panel del bot de GitHub (v2.7) =====================
 // Lee signals.json (lo publica el bot en la rama signals-data cada ~15 min) y lo explica.
