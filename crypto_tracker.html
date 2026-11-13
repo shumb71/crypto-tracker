@@ -71,6 +71,8 @@ tr:last-child td { border-bottom: none; }
 .fng-lbl { font-size: 14px; font-weight: 500; }
 .fng-sub { font-size: 12px; color: #888; margin-top: 2px; }
 .fng-spark { margin-left: auto; }
+.fng-hist { display: flex; gap: 6px; align-items: baseline; font-size: 12px; font-weight: 500; margin-top: 3px; }
+.fng-hist span { opacity: 0.9; }
 .sym-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
 .sym-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 99px; font-size: 12px; cursor: pointer; }
 .sym-chip:hover { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
@@ -169,7 +171,7 @@ tr:last-child td { border-bottom: none; }
     <h1>Crypto Portfolio Tracker</h1>
     <div class="header-right">
       <div class="sync-bar" id="syncBar"><span class="live-dot"></span>Conectando...</div>
-      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.9</span>
+      <span style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.03em;">v2.10</span>
       <button class="drive-btn" id="driveBtn" onclick="handleDriveAuth()">
         <i class="ti ti-brand-google-drive"></i>
         <span id="driveBtnText">Conectar Drive</span>
@@ -439,10 +441,14 @@ function renderFng() {
   const diff = prev ? last.v - prev.v : 0;
   const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '=';
   const fecha = new Date(last.ts).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const hist = fngData.slice(-6, -1).map(d => `<span style="color:${fngInfo(d.v).c}" title="${new Date(d.ts).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}">${d.v}</span>`).join('');
   const W = 160, H = 44, n = fngData.length;
   const pts = fngData.map((d, i) => `${(n > 1 ? i * W / (n - 1) : W).toFixed(1)},${(H - d.v / 100 * H).toFixed(1)}`).join(' ');
   el.innerHTML = `<div class="fng-card">
-    <div class="fng-val" style="color:${info.c}">${last.v}</div>
+    <div>
+      <div class="fng-val" style="color:${info.c}">${last.v}</div>
+      <div class="fng-hist" title="Últimos 5 días antes de hoy (de más antiguo a más reciente)">${hist}</div>
+    </div>
     <div>
       <div class="fng-lbl" style="color:${info.c}">${info.t}</div>
       <div class="fng-sub">Miedo y Codicia (cripto) · ${arrow} ${prev ? (diff > 0 ? '+' : '') + diff + ' vs ayer' : ''} · ${fecha}</div>

@@ -151,10 +151,39 @@ def bloque(symbol, s):
     return "\n".join(out)
 
 
-def resumen(senales, ahora):
+def fng_info(v):
+    if v < 25:
+        return "Miedo extremo", "😱"
+    if v < 45:
+        return "Miedo", "😨"
+    if v <= 55:
+        return "Neutral", "😐"
+    if v <= 75:
+        return "Codicia", "🤑"
+    return "Codicia extrema", "🔥"
+
+
+def miedo_codicia():
+    """Índice Miedo y Codicia (alternative.me). Devuelve la línea de texto, o '' si no hay datos."""
+    try:
+        datos = http_json("https://api.alternative.me/fng/?limit=6")["data"]
+        vals = [int(d["value"]) for d in reversed(datos)]  # de más antiguo a más reciente
+        if not vals:
+            return ""
+        etiqueta, icono = fng_info(vals[-1])
+        previos = ", ".join(str(v) for v in vals[:-1])
+        return f"{icono} Miedo y Codicia: <b>{vals[-1]}</b> ({etiqueta})" + (f" · 5 días antes: {previos}" if previos else "")
+    except Exception as e:  # noqa: BLE001 - el bot no debe caerse por esto
+        print(f"AVISO: no se pudo leer Miedo y Codicia: {e}")
+        return ""
+
+
+def resumen(senales, ahora, fng=""):
     hora = ahora.astimezone(ZoneInfo("Europe/Madrid")).strftime("%d/%m %H:%M")
     partes = [f"📊 <b>Señales cripto</b> — {hora}"]
     partes += [bloque(sym, s) for sym, s in senales.items()]
+    if fng:
+        partes.append(fng)
     partes.append("Nota: 0 = todo bajista, 5 = neutral, 10 = todo alcista.\n" + AVISO)
     return "\n\n".join(partes)
 
@@ -338,14 +367,15 @@ def main():
 
     cmds, estado["tg_offset"] = tg.comandos(estado.get("tg_offset", 0))
     msgs = alertas(cfg, senales, estado)
+    fng = miedo_codicia()
     if primera_vez:
         msgs = []  # en el primer arranque manda solo el resumen, no una ráfaga de avisos
     for m in msgs:
-        tg.enviar(m + "\n\n" + AVISO)
+        tg.enviar(m + ("\n\n" + fng if fng else "") + "\n\n" + AVISO)
     if "/ayuda" in cmds or "/start" in cmds:
         tg.enviar(AYUDA)
     if args.estado or primera_vez or "/estado" in cmds or "/start" in cmds:
-        tg.enviar(resumen(senales, ahora))
+        tg.enviar(resumen(senales, ahora, fng))
 
     (out / "signals.json").write_text(json.dumps(
         {"generado": ahora.isoformat(timespec="seconds"), "fuentes": fuentes, "senales": senales},
