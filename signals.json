@@ -1,0 +1,2660 @@
+{
+ "generado": "2026-11-14T16:45:24+00:00",
+ "fuentes": [
+  "binance"
+ ],
+ "senales": {
+  "BTCUSDT": {
+   "precio": 65742.01,
+   "global": {
+    "score": -0.331,
+    "nota": 3.3,
+    "etiqueta": "bajista",
+    "fuerte": false,
+    "lado": -1,
+    "acuerdo": 3
+   },
+   "tf": {
+    "1h": {
+     "score": -0.76,
+     "nota": 1.2,
+     "componentes": {
+      "tendencia": -1,
+      "estructura": -1.0,
+      "momento": -1.0,
+      "divergencia": 0.6,
+      "volumen": -1
+     },
+     "rsi": 22.7,
+     "ema55": 69133.4587158979,
+     "ema200": 72791.27096192037,
+     "atr_pct": 0.9,
+     "divergencia": {
+      "tipo": "alcista",
+      "rsi": false,
+      "squeeze": true,
+      "t": 1794628800000,
+      "det": {
+       "rsi": null,
+       "squeeze": {
+        "tipo": "alcista",
+        "t": 1794628800000,
+        "p": [
+         68103.0,
+         66456.0
+        ],
+        "i": [
+         -1312.569,
+         -1076.3851
+        ]
+       }
+      }
+     },
+     "tendencia": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 1,
+      "min": 2,
+      "senales": {
+       "divergencia": true,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": {
+       "tipo": "alcista",
+       "rsi": false,
+       "squeeze": true,
+       "t": 1794628800000,
+       "det": {
+        "rsi": null,
+        "squeeze": {
+         "tipo": "alcista",
+         "t": 1794628800000,
+         "p": [
+          68103.0,
+          66456.0
+         ],
+         "i": [
+          -1312.569,
+          -1076.3851
+         ]
+        }
+       }
+      },
+      "doble": null,
+      "ruptura": null,
+      "adx": 50.9,
+      "squeeze": -1224.3042
+     },
+     "compresion": false,
+     "cierre": 65742.01,
+     "t": 1794668400000,
+     "guia": {
+      "horizonte": "8 a 12 horas",
+      "uso": "Operativa intradía y ajuste de la entrada",
+      "accion_caidas": "Buscar entradas rápidas al terminar las correcciones"
+     },
+     "porques": {
+      "resumen": "Nota 1,2/10. El bloque que más pesa ahora es «Tendencia de fondo» (resta 0,35). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -1,
+        "peso": 0.35,
+        "aporta": -0.35,
+        "texto": "El precio (65.742) está por debajo de la EMA 55 (69.133); la EMA 55 está por debajo de la EMA 200 (72.791); la EMA 55 baja. Conclusión: mandan los vendedores.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": -1.0,
+        "peso": 0.15,
+        "aporta": -0.15,
+        "texto": "El último máximo (67.523) es más bajo que el anterior (70.214) y el último mínimo (66.456) es más bajo que el anterior (68.103). Máximos y mínimos decrecientes: estructura bajista.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -1.0,
+        "peso": 0.25,
+        "aporta": -0.25,
+        "texto": "El RSI está en 22,7 (sobreventa: puede estar cansado a la baja). El histograma del MACD es negativo y baja (-15,1 → -56,2).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.6,
+        "peso": 0.15,
+        "aporta": 0.09,
+        "texto": "Hay divergencia alcista (Squeeze): el precio hizo un mínimo de 66.456 (el anterior, 68.103) pero el Squeeze marcó -1,08e+03 frente a -1,31e+03: menos presión vendedora. Es una señal de que la bajada pierde fuerza.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": -1,
+        "peso": 0.1,
+        "aporta": -0.1,
+        "texto": "El volumen de las 3 últimas velas es 3,3× la media de las 20 anteriores. Con volumen alto el movimiento bajista reciente es más fiable.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 1,
+      "min": 2,
+      "resumen": "La tendencia bajista sigue sana: solo 1 de 4 señales de agotamiento (hacen falta 2).",
+      "senales": [
+       {
+        "id": "divergencia",
+        "titulo": "Divergencia en el monitor",
+        "ok": true,
+        "texto": "El precio hizo un mínimo de 66.456 (el anterior, 68.103) pero el Squeeze marcó -1,08e+03 frente a -1,31e+03: menos presión vendedora.",
+        "regla": "Guía §5.2",
+        "donde": "Ventana del Squeeze: compara las dos últimas crestas verdes (o valles rojos) con los máximos (o mínimos) del precio."
+       },
+       {
+        "id": "doble",
+        "titulo": "Doble techo / doble suelo",
+        "ok": false,
+        "texto": "No hay doble suelo: el precio no se ha quedado repitiendo el último extremo.",
+        "regla": "Guía §5.1 (el precio deja de hacer extremos nuevos)",
+        "donde": "Busca dos picos (o dos suelos) casi a la misma altura sin que el segundo supere al primero."
+       },
+       {
+        "id": "compresion",
+        "titulo": "Medias 10 y 55 juntándose",
+        "ok": false,
+        "texto": "La separación entre la EMA 10 y la EMA 55 es de 4,0 ATR (en lo más fuerte de la tendencia llegó a 4,5) y el precio está a 5,8 ATR de la EMA 55. Siguen separadas: la tendencia mantiene su abanico.",
+        "regla": "Guía §5.1",
+        "donde": "Línea azul (EMA 10) y línea café (EMA 55): ¿se están acercando y el precio oscila pegado a la café?"
+       },
+       {
+        "id": "adx",
+        "titulo": "ADX perdiendo fuerza",
+        "ok": false,
+        "texto": "El ADX está en 50,9 (hace 3 velas, 47,5; su pico reciente, 57,2). Todavía no muestra pérdida clara de fuerza.",
+        "regla": "Guía §5.2 y §2.3",
+        "donde": "Línea blanca del ADX: ¿apunta hacia abajo mientras el precio sigue empujando?"
+       }
+      ]
+     },
+     "escenarios": [
+      {
+       "tipo": "vigila",
+       "cuando": "El precio aguanta bajo la EMA 55 (69.133) y el ADX no gira a la baja",
+       "entonces": "La tendencia sigue sana; no hay motivo para dudar de ella."
+      },
+      {
+       "tipo": "debilita",
+       "cuando": "Aparece una divergencia en el Squeeze o el ADX empieza a caer (50,9 ahora)",
+       "entonces": "Sería la primera señal de agotamiento; con una segunda, el panel y el bot lo marcan como «agotándose»."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.09,
+       "nombre": "baja",
+       "rango": [
+        65066.66,
+        72580.44
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -5.75,
+       "poc": 73723.52,
+       "dist_poc_atr": -13.54,
+       "squeeze_color": "rojo oscuro (acelera a la baja)",
+       "adx_pendiente": 2.79
+      },
+      "entrada_long": {
+       "cumple": 0,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 5,8 ATR por debajo de la EMA 55 (69.133) y en el 9 % del rango de las últimas 50 velas (65.067 – 72.580). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -1,17e+03 a -1,22e+03: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 50,9 (hace 2 velas, 48,1): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 73.724; el precio está a 13,5 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "No hay lateral con el precio en el centro del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 9 % del rango y a -5,8 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX sube (48,1 → 50,9). Caída con fuerza confirmada: intentar comprar es «atrapar un cuchillo».",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 9 % del rango de las últimas 50 velas (65.067 – 72.580). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 98 % del de hace 20 velas y el ADX sube (48,1 → 50,9). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 0,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: sana. El precio está a 5,8 ATR por debajo de la EMA 55 (69.133) y en el 9 % del rango de las últimas 50 velas (65.067 – 72.580). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -1,17e+03 a -1,22e+03: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 50,9 (hace 2 velas, 48,1): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): caída con adx con pendiente positiva.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    },
+    "4h": {
+     "score": -0.79,
+     "nota": 1.0,
+     "componentes": {
+      "tendencia": -1,
+      "estructura": -1.0,
+      "momento": -1.0,
+      "divergencia": 0.0,
+      "volumen": -0.4
+     },
+     "rsi": 19.3,
+     "ema55": 72963.07235611147,
+     "ema200": 77425.9438414896,
+     "atr_pct": 1.86,
+     "divergencia": null,
+     "tendencia": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 0,
+      "min": 2,
+      "senales": {
+       "divergencia": false,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": null,
+      "doble": null,
+      "ruptura": null,
+      "adx": 58.5,
+      "squeeze": -4454.6784
+     },
+     "compresion": false,
+     "cierre": 65742.01,
+     "t": 1794657600000,
+     "guia": {
+      "horizonte": "24 a 48 horas",
+      "uso": "Trading táctico (futuros con stop loss)",
+      "accion_caidas": "Esperar el retroceso a la EMA 55 con valle rojo"
+     },
+     "porques": {
+      "resumen": "Nota 1,0/10. El bloque que más pesa ahora es «Tendencia de fondo» (resta 0,35). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -1,
+        "peso": 0.35,
+        "aporta": -0.35,
+        "texto": "El precio (65.742) está por debajo de la EMA 55 (72.963); la EMA 55 está por debajo de la EMA 200 (77.426); la EMA 55 baja. Conclusión: mandan los vendedores.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": -1.0,
+        "peso": 0.15,
+        "aporta": -0.15,
+        "texto": "El último máximo (74.811) es más bajo que el anterior (76.200) y el último mínimo (72.727) es más bajo que el anterior (73.510). Máximos y mínimos decrecientes: estructura bajista.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -1.0,
+        "peso": 0.25,
+        "aporta": -0.25,
+        "texto": "El RSI está en 19,3 (sobreventa: puede estar cansado a la baja). El histograma del MACD es negativo y baja (-337 → -367).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.0,
+        "peso": 0.15,
+        "aporta": 0.0,
+        "texto": "No hay divergencia reciente (últimas ~20 velas) entre el precio y el RSI o el Squeeze.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": -0.4,
+        "peso": 0.1,
+        "aporta": -0.04,
+        "texto": "El volumen de las 3 últimas velas es 1,4× la media de las 20 anteriores. Con volumen alto el movimiento bajista reciente es más fiable.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 0,
+      "min": 2,
+      "resumen": "La tendencia bajista sigue sana: solo 0 de 4 señales de agotamiento (hacen falta 2).",
+      "senales": [
+       {
+        "id": "divergencia",
+        "titulo": "Divergencia en el monitor",
+        "ok": false,
+        "texto": "No hay divergencia reciente entre el precio y el Squeeze o el RSI.",
+        "regla": "Guía §5.2",
+        "donde": "Ventana del Squeeze: compara las dos últimas crestas verdes (o valles rojos) con los máximos (o mínimos) del precio."
+       },
+       {
+        "id": "doble",
+        "titulo": "Doble techo / doble suelo",
+        "ok": false,
+        "texto": "No hay doble suelo: el precio no se ha quedado repitiendo el último extremo.",
+        "regla": "Guía §5.1 (el precio deja de hacer extremos nuevos)",
+        "donde": "Busca dos picos (o dos suelos) casi a la misma altura sin que el segundo supere al primero."
+       },
+       {
+        "id": "compresion",
+        "titulo": "Medias 10 y 55 juntándose",
+        "ok": false,
+        "texto": "La separación entre la EMA 10 y la EMA 55 es de 3,9 ATR (en lo más fuerte de la tendencia llegó a 3,9) y el precio está a 5,9 ATR de la EMA 55. Siguen separadas: la tendencia mantiene su abanico.",
+        "regla": "Guía §5.1",
+        "donde": "Línea azul (EMA 10) y línea café (EMA 55): ¿se están acercando y el precio oscila pegado a la café?"
+       },
+       {
+        "id": "adx",
+        "titulo": "ADX perdiendo fuerza",
+        "ok": false,
+        "texto": "El ADX está en 58,5 (hace 3 velas, 55,5; su pico reciente, 58,5). Todavía no muestra pérdida clara de fuerza.",
+        "regla": "Guía §5.2 y §2.3",
+        "donde": "Línea blanca del ADX: ¿apunta hacia abajo mientras el precio sigue empujando?"
+       }
+      ]
+     },
+     "escenarios": [
+      {
+       "tipo": "vigila",
+       "cuando": "El precio aguanta bajo la EMA 55 (72.963) y el ADX no gira a la baja",
+       "entonces": "La tendencia sigue sana; no hay motivo para dudar de ella."
+      },
+      {
+       "tipo": "debilita",
+       "cuando": "Aparece una divergencia en el Squeeze o el ADX empieza a caer (58,5 ahora)",
+       "entonces": "Sería la primera señal de agotamiento; con una segunda, el panel y el bot lo marcan como «agotándose»."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.06,
+       "nombre": "baja",
+       "rango": [
+        65066.66,
+        76378.0
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -5.91,
+       "poc": 77921.002,
+       "dist_poc_atr": -9.96,
+       "squeeze_color": "rojo oscuro (acelera a la baja)",
+       "adx_pendiente": 2.08
+      },
+      "entrada_long": {
+       "cumple": 0,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 5,9 ATR por debajo de la EMA 55 (72.963) y en el 6 % del rango de las últimas 50 velas (65.067 – 76.378). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -4,15e+03 a -4,45e+03: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 58,5 (hace 2 velas, 56,4): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 77.921; el precio está a 10,0 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "No hay lateral con el precio en el centro del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 6 % del rango y a -5,9 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX sube (56,4 → 58,5). Caída con fuerza confirmada: intentar comprar es «atrapar un cuchillo».",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 6 % del rango de las últimas 50 velas (65.067 – 76.378). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 137 % del de hace 20 velas y el ADX sube (56,4 → 58,5). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 0,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: sana. El precio está a 5,9 ATR por debajo de la EMA 55 (72.963) y en el 6 % del rango de las últimas 50 velas (65.067 – 76.378). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -4,15e+03 a -4,45e+03: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 58,5 (hace 2 velas, 56,4): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): caída con adx con pendiente positiva.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    },
+    "1d": {
+     "score": -0.557,
+     "nota": 2.2,
+     "componentes": {
+      "tendencia": -0.33,
+      "estructura": -1.0,
+      "momento": -1.0,
+      "divergencia": 0.0,
+      "volumen": -0.4
+     },
+     "rsi": 24.5,
+     "ema55": 78216.08093648207,
+     "ema200": 76640.790326249,
+     "atr_pct": 3.55,
+     "divergencia": null,
+     "tendencia": {
+      "estado": "ruptura_dudosa",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "senales": {
+       "divergencia": false,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": null,
+      "doble": null,
+      "ruptura": {
+       "dir": -1,
+       "t": 1794441600000,
+       "vela_atr": 1.38,
+       "vol_x": 1.06,
+       "cruce": false,
+       "confirmada": false
+      },
+      "adx": 25.7,
+      "squeeze": -5150.6672
+     },
+     "compresion": false,
+     "cierre": 68314.0,
+     "t": 1794528000000,
+     "guia": {
+      "horizonte": "10 a 12 días",
+      "uso": "Trading de posición (spot o futuros)",
+      "accion_caidas": "Respetar la tendencia; apartarse si no hay patrón"
+     },
+     "porques": {
+      "resumen": "Nota 2,2/10. El bloque que más pesa ahora es «Momento (RSI y MACD)» (resta 0,25). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -0.33,
+        "peso": 0.35,
+        "aporta": -0.115,
+        "texto": "El precio (68.314) está por debajo de la EMA 55 (78.216); la EMA 55 está por encima de la EMA 200 (76.641); la EMA 55 baja. Conclusión: las señales van mezcladas.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": -1.0,
+        "peso": 0.15,
+        "aporta": -0.15,
+        "texto": "El último máximo (81.196) es más bajo que el anterior (81.971) y el último mínimo (79.800) es más bajo que el anterior (80.394). Máximos y mínimos decrecientes: estructura bajista.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -1.0,
+        "peso": 0.25,
+        "aporta": -0.25,
+        "texto": "El RSI está en 24,5 (sobreventa: puede estar cansado a la baja). El histograma del MACD es negativo y baja (-484 → -720).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.0,
+        "peso": 0.15,
+        "aporta": 0.0,
+        "texto": "No hay divergencia reciente (últimas ~20 velas) entre el precio y el RSI o el Squeeze.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": -0.4,
+        "peso": 0.1,
+        "aporta": -0.04,
+        "texto": "El volumen de las 3 últimas velas es 1,4× la media de las 20 anteriores. Con volumen alto el movimiento bajista reciente es más fiable.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "ruptura_dudosa",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "resumen": "El precio salió del lateral a la baja: vela de 1,4× ATR (mínimo 1,5), volumen de 1,1× la media (mínimo 1,3) y sin cruce de las EMA 10/55. Falta: fuerza de la vela, volumen, cruce de medias. La guía exige las tres a la vez, así que aún no se da por confirmada.",
+      "senales": []
+     },
+     "escenarios": [
+      {
+       "tipo": "confirma",
+       "cuando": "Llega una vela más fuerte, más volumen, el cruce de medias",
+       "entonces": "La ruptura pasaría a confirmada."
+      },
+      {
+       "tipo": "anula",
+       "cuando": "El precio vuelve dentro del lateral (67.568 – 81.971)",
+       "entonces": "Sería una falsa ruptura."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.038,
+       "nombre": "baja",
+       "rango": [
+        67568.0,
+        87220.0
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -4.09,
+       "poc": 77814.046,
+       "dist_poc_atr": -3.92,
+       "squeeze_color": "rojo oscuro (acelera a la baja)",
+       "adx_pendiente": 3.86
+      },
+      "entrada_long": {
+       "cumple": 0,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 4,1 ATR por debajo de la EMA 55 (78.216) y en el 4 % del rango de las últimas 50 velas (67.568 – 87.220). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -4,45e+03 a -5,15e+03: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 25,7 (hace 2 velas, 21,8): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 77.814; el precio está a 3,9 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "No hay lateral con el precio en el centro del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 4 % del rango y a -4,1 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX sube (21,8 → 25,7). Caída con fuerza confirmada: intentar comprar es «atrapar un cuchillo».",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 4 % del rango de las últimas 50 velas (67.568 – 87.220). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 114 % del de hace 20 velas y el ADX sube (21,8 → 25,7). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 0,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: posible ruptura. El precio está a 4,1 ATR por debajo de la EMA 55 (78.216) y en el 4 % del rango de las últimas 50 velas (67.568 – 87.220). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -4,45e+03 a -5,15e+03: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 25,7 (hace 2 velas, 21,8): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): caída con adx con pendiente positiva.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    },
+    "1w": {
+     "score": 0.279,
+     "nota": 6.4,
+     "componentes": {
+      "tendencia": 0.33,
+      "estructura": 0.0,
+      "momento": 0.05,
+      "divergencia": 1.0,
+      "volumen": 0
+     },
+     "rsi": 47.9,
+     "ema55": 78835.647870989,
+     "ema200": 69562.63029554872,
+     "atr_pct": 8.28,
+     "divergencia": {
+      "tipo": "alcista",
+      "rsi": true,
+      "squeeze": true,
+      "t": 1782691200000,
+      "det": {
+       "rsi": {
+        "tipo": "alcista",
+        "t": 1782691200000,
+        "p": [
+         60000.0,
+         57800.19
+        ],
+        "i": [
+         29.013487,
+         38.238921
+        ]
+       },
+       "squeeze": {
+        "tipo": "alcista",
+        "t": 1782691200000,
+        "p": [
+         60000.0,
+         57800.19
+        ],
+        "i": [
+         -24041.289,
+         -2821.8819
+        ]
+       }
+      }
+     },
+     "tendencia": {
+      "estado": "lateral",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "senales": {
+       "divergencia": false,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": {
+       "tipo": "alcista",
+       "rsi": true,
+       "squeeze": true,
+       "t": 1782691200000,
+       "det": {
+        "rsi": {
+         "tipo": "alcista",
+         "t": 1782691200000,
+         "p": [
+          60000.0,
+          57800.19
+         ],
+         "i": [
+          29.013487,
+          38.238921
+         ]
+        },
+        "squeeze": {
+         "tipo": "alcista",
+         "t": 1782691200000,
+         "p": [
+          60000.0,
+          57800.19
+         ],
+         "i": [
+          -24041.289,
+          -2821.8819
+         ]
+        }
+       }
+      },
+      "doble": null,
+      "ruptura": null,
+      "adx": 23.5,
+      "squeeze": 13079.401
+     },
+     "compresion": false,
+     "cierre": 74851.44,
+     "t": 1793577600000,
+     "guia": {
+      "horizonte": "3 a 6 meses",
+      "uso": "Inversión de medio plazo en spot",
+      "accion_caidas": "Buscar zonas de soporte para compras escalonadas"
+     },
+     "porques": {
+      "resumen": "Nota 6,4/10. El bloque que más pesa ahora es «Divergencias» (suma 0,15). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": 0.33,
+        "peso": 0.35,
+        "aporta": 0.115,
+        "texto": "El precio (74.851) está por debajo de la EMA 55 (78.836); la EMA 55 está por encima de la EMA 200 (69.563); la EMA 55 sube. Conclusión: las señales van mezcladas.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": 0.0,
+        "peso": 0.15,
+        "aporta": 0.0,
+        "texto": "El último máximo (87.396) es más alto que el anterior (82.850) y el último mínimo (57.800) es más bajo que el anterior (60.000). Estructura mixta: no confirma ninguna dirección.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": 0.05,
+        "peso": 0.25,
+        "aporta": 0.013,
+        "texto": "El RSI está en 47,9 (por debajo de 50: manda el impulso vendedor). El histograma del MACD es positivo y baja (1,28e+03 → 655).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 1.0,
+        "peso": 0.15,
+        "aporta": 0.15,
+        "texto": "Hay divergencia alcista (RSI y Squeeze): el precio hizo un mínimo de 57.800 (el anterior, 60.000) pero el Squeeze marcó -2,82e+03 frente a -2,4e+04: menos presión vendedora; el precio hizo un mínimo de 57.800 (el anterior, 60.000) pero el RSI marcó 38,2 frente a 29: menos presión vendedora. Coinciden los dos indicadores, así que es más fiable. Es una señal de que la bajada pierde fuerza.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": 0,
+        "peso": 0.1,
+        "aporta": 0.0,
+        "texto": "El volumen de las 3 últimas velas es 0,9× la media de las 20 anteriores. Volumen normal o bajo: no refuerza ni resta.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "lateral",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "resumen": "El precio está en un lateral: ADX 23,5 (bajo 25), EMA 10 y 55 a 0,0 ATR una de otra y un rango de 4,8 ATR en 20 velas. Según la guía (§5.3), las tendencias suelen pasar por un lateral antes de girar.",
+      "senales": []
+     },
+     "escenarios": [
+      {
+       "tipo": "confirma",
+       "cuando": "Cierre por encima de 87.396 con una vela de al menos 9.294,8 de recorrido (1,5 ATR), volumen de 1,3× la media o más y la EMA 10 cruzando sobre la 55",
+       "entonces": "Ruptura alcista confirmada: la guía da por cambiada la tendencia."
+      },
+      {
+       "tipo": "confirma",
+       "cuando": "Cierre por debajo de 57.800 con las mismas tres condiciones",
+       "entonces": "Ruptura bajista confirmada."
+      },
+      {
+       "tipo": "vigila",
+       "cuando": "Mientras no rompa",
+       "entonces": "El centro del lateral es zona no operable según la guía: ni compra ni venta con ventaja."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.425,
+       "nombre": "media",
+       "rango": [
+        57800.19,
+        97924.49
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -0.64,
+       "poc": 79887.509,
+       "dist_poc_atr": -0.81,
+       "squeeze_color": "verde claro (pierde tracción)",
+       "adx_pendiente": -3.02
+      },
+      "entrada_long": {
+       "cumple": 1,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 0,6 ATR por debajo de la EMA 55 (78.836) y en el 42 % del rango de las últimas 50 velas (57.800 – 97.924). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de 1,42e+04 a 1,31e+04: verde claro (pierde tracción). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": true,
+         "texto": "El ADX está en 23,5 (hace 2 velas, 26,5): pendiente negativa. La caída no lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 79.888; el precio está a 0,8 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "Hay lateral y el precio está en el 42 % del rango: zona media, sin ventaja estadística.",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 42 % del rango y a -0,6 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX baja (26,5 → 23,5). No es una caída con fuerza.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 42 % del rango de las últimas 50 velas (57.800 – 97.924). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 85 % del de hace 20 velas y el ADX baja (26,5 → 23,5). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 1,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: lateral. El precio está a 0,6 ATR por debajo de la EMA 55 (78.836) y en el 42 % del rango de las últimas 50 velas (57.800 – 97.924). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de 1,42e+04 a 1,31e+04: verde claro (pierde tracción). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": true,
+         "texto": "El ADX está en 23,5 (hace 2 velas, 26,5): pendiente negativa. La caída no lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): parte media de un lateral.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "ETHUSDT": {
+   "precio": 1841.23,
+   "global": {
+    "score": -0.514,
+    "nota": 2.4,
+    "etiqueta": "BAJISTA FUERTE",
+    "fuerte": true,
+    "lado": -1,
+    "acuerdo": 4
+   },
+   "tf": {
+    "1h": {
+     "score": -0.76,
+     "nota": 1.2,
+     "componentes": {
+      "tendencia": -1,
+      "estructura": -1.0,
+      "momento": -1.0,
+      "divergencia": 0.6,
+      "volumen": -1
+     },
+     "rsi": 25.0,
+     "ema55": 1948.7553457646263,
+     "ema200": 2072.965367641974,
+     "atr_pct": 1.18,
+     "divergencia": {
+      "tipo": "alcista",
+      "rsi": false,
+      "squeeze": true,
+      "t": 1794621600000,
+      "det": {
+       "rsi": null,
+       "squeeze": {
+        "tipo": "alcista",
+        "t": 1794621600000,
+        "p": [
+         1912.0,
+         1878.0
+        ],
+        "i": [
+         -32.786343,
+         -24.200186
+        ]
+       }
+      }
+     },
+     "tendencia": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 1,
+      "min": 2,
+      "senales": {
+       "divergencia": true,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": {
+       "tipo": "alcista",
+       "rsi": false,
+       "squeeze": true,
+       "t": 1794621600000,
+       "det": {
+        "rsi": null,
+        "squeeze": {
+         "tipo": "alcista",
+         "t": 1794621600000,
+         "p": [
+          1912.0,
+          1878.0
+         ],
+         "i": [
+          -32.786343,
+          -24.200186
+         ]
+        }
+       }
+      },
+      "doble": null,
+      "ruptura": null,
+      "adx": 39.9,
+      "squeeze": -34.6912
+     },
+     "compresion": false,
+     "cierre": 1841.23,
+     "t": 1794668400000,
+     "guia": {
+      "horizonte": "8 a 12 horas",
+      "uso": "Operativa intradía y ajuste de la entrada",
+      "accion_caidas": "Buscar entradas rápidas al terminar las correcciones"
+     },
+     "porques": {
+      "resumen": "Nota 1,2/10. El bloque que más pesa ahora es «Tendencia de fondo» (resta 0,35). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -1,
+        "peso": 0.35,
+        "aporta": -0.35,
+        "texto": "El precio (1.841,2) está por debajo de la EMA 55 (1.948,8); la EMA 55 está por debajo de la EMA 200 (2.073,0); la EMA 55 baja. Conclusión: mandan los vendedores.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": -1.0,
+        "peso": 0.15,
+        "aporta": -0.15,
+        "texto": "El último máximo (1.919,8) es más bajo que el anterior (1.989,1) y el último mínimo (1.878,0) es más bajo que el anterior (1.912,0). Máximos y mínimos decrecientes: estructura bajista.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -1.0,
+        "peso": 0.25,
+        "aporta": -0.25,
+        "texto": "El RSI está en 25,0 (sobreventa: puede estar cansado a la baja). El histograma del MACD es negativo y baja (-1,32 → -3,63).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.6,
+        "peso": 0.15,
+        "aporta": 0.09,
+        "texto": "Hay divergencia alcista (Squeeze): el precio hizo un mínimo de 1.878,0 (el anterior, 1.912,0) pero el Squeeze marcó -24,2 frente a -32,8: menos presión vendedora. Es una señal de que la bajada pierde fuerza.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": -1,
+        "peso": 0.1,
+        "aporta": -0.1,
+        "texto": "El volumen de las 3 últimas velas es 3,6× la media de las 20 anteriores. Con volumen alto el movimiento bajista reciente es más fiable.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 1,
+      "min": 2,
+      "resumen": "La tendencia bajista sigue sana: solo 1 de 4 señales de agotamiento (hacen falta 2).",
+      "senales": [
+       {
+        "id": "divergencia",
+        "titulo": "Divergencia en el monitor",
+        "ok": true,
+        "texto": "El precio hizo un mínimo de 1.878,0 (el anterior, 1.912,0) pero el Squeeze marcó -24,2 frente a -32,8: menos presión vendedora.",
+        "regla": "Guía §5.2",
+        "donde": "Ventana del Squeeze: compara las dos últimas crestas verdes (o valles rojos) con los máximos (o mínimos) del precio."
+       },
+       {
+        "id": "doble",
+        "titulo": "Doble techo / doble suelo",
+        "ok": false,
+        "texto": "No hay doble suelo: el precio no se ha quedado repitiendo el último extremo.",
+        "regla": "Guía §5.1 (el precio deja de hacer extremos nuevos)",
+        "donde": "Busca dos picos (o dos suelos) casi a la misma altura sin que el segundo supere al primero."
+       },
+       {
+        "id": "compresion",
+        "titulo": "Medias 10 y 55 juntándose",
+        "ok": false,
+        "texto": "La separación entre la EMA 10 y la EMA 55 es de 2,9 ATR (en lo más fuerte de la tendencia llegó a 3,2) y el precio está a 5,0 ATR de la EMA 55. Siguen separadas: la tendencia mantiene su abanico.",
+        "regla": "Guía §5.1",
+        "donde": "Línea azul (EMA 10) y línea café (EMA 55): ¿se están acercando y el precio oscila pegado a la café?"
+       },
+       {
+        "id": "adx",
+        "titulo": "ADX perdiendo fuerza",
+        "ok": false,
+        "texto": "El ADX está en 39,9 (hace 3 velas, 35,8; su pico reciente, 45,9). Todavía no muestra pérdida clara de fuerza.",
+        "regla": "Guía §5.2 y §2.3",
+        "donde": "Línea blanca del ADX: ¿apunta hacia abajo mientras el precio sigue empujando?"
+       }
+      ]
+     },
+     "escenarios": [
+      {
+       "tipo": "vigila",
+       "cuando": "El precio aguanta bajo la EMA 55 (1.948,8) y el ADX no gira a la baja",
+       "entonces": "La tendencia sigue sana; no hay motivo para dudar de ella."
+      },
+      {
+       "tipo": "debilita",
+       "cuando": "Aparece una divergencia en el Squeeze o el ADX empieza a caer (39,9 ahora)",
+       "entonces": "Sería la primera señal de agotamiento; con una segunda, el panel y el bot lo marcan como «agotándose»."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.082,
+       "nombre": "baja",
+       "rango": [
+        1824.46,
+        2028.12
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -4.96,
+       "poc": 2058.6868,
+       "dist_poc_atr": -10.03,
+       "squeeze_color": "rojo oscuro (acelera a la baja)",
+       "adx_pendiente": 3.48
+      },
+      "entrada_long": {
+       "cumple": 0,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 5,0 ATR por debajo de la EMA 55 (1.948,8) y en el 8 % del rango de las últimas 50 velas (1.824,5 – 2.028,1). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -30,3 a -34,7: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 39,9 (hace 2 velas, 36,4): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 2.058,7; el precio está a 10,0 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "No hay lateral con el precio en el centro del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 8 % del rango y a -5,0 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX sube (36,4 → 39,9). Caída con fuerza confirmada: intentar comprar es «atrapar un cuchillo».",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 8 % del rango de las últimas 50 velas (1.824,5 – 2.028,1). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 101 % del de hace 20 velas y el ADX sube (36,4 → 39,9). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 0,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: sana. El precio está a 5,0 ATR por debajo de la EMA 55 (1.948,8) y en el 8 % del rango de las últimas 50 velas (1.824,5 – 2.028,1). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -30,3 a -34,7: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 39,9 (hace 2 velas, 36,4): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): caída con adx con pendiente positiva.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    },
+    "4h": {
+     "score": -0.783,
+     "nota": 1.1,
+     "componentes": {
+      "tendencia": -1,
+      "estructura": -1.0,
+      "momento": -1.0,
+      "divergencia": 0.0,
+      "volumen": -0.33
+     },
+     "rsi": 24.8,
+     "ema55": 2080.3632041001956,
+     "ema200": 2270.232012777183,
+     "atr_pct": 2.41,
+     "divergencia": null,
+     "tendencia": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 0,
+      "min": 2,
+      "senales": {
+       "divergencia": false,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": null,
+      "doble": null,
+      "ruptura": null,
+      "adx": 56.3,
+      "squeeze": -102.3527
+     },
+     "compresion": false,
+     "cierre": 1841.23,
+     "t": 1794657600000,
+     "guia": {
+      "horizonte": "24 a 48 horas",
+      "uso": "Trading táctico (futuros con stop loss)",
+      "accion_caidas": "Esperar el retroceso a la EMA 55 con valle rojo"
+     },
+     "porques": {
+      "resumen": "Nota 1,1/10. El bloque que más pesa ahora es «Tendencia de fondo» (resta 0,35). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -1,
+        "peso": 0.35,
+        "aporta": -0.35,
+        "texto": "El precio (1.841,2) está por debajo de la EMA 55 (2.080,4); la EMA 55 está por debajo de la EMA 200 (2.270,2); la EMA 55 baja. Conclusión: mandan los vendedores.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": -1.0,
+        "peso": 0.15,
+        "aporta": -0.15,
+        "texto": "El último máximo (2.103,8) es más bajo que el anterior (2.246,0) y el último mínimo (2.006,0) es más bajo que el anterior (2.060,0). Máximos y mínimos decrecientes: estructura bajista.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -1.0,
+        "peso": 0.25,
+        "aporta": -0.25,
+        "texto": "El RSI está en 24,8 (sobreventa: puede estar cansado a la baja). El histograma del MACD es negativo y baja (-3,8 → -6,43).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.0,
+        "peso": 0.15,
+        "aporta": 0.0,
+        "texto": "No hay divergencia reciente (últimas ~20 velas) entre el precio y el RSI o el Squeeze.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": -0.33,
+        "peso": 0.1,
+        "aporta": -0.033,
+        "texto": "El volumen de las 3 últimas velas es 1,3× la media de las 20 anteriores. Con volumen alto el movimiento bajista reciente es más fiable.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "sana",
+      "dir": -1,
+      "n_senales": 0,
+      "min": 2,
+      "resumen": "La tendencia bajista sigue sana: solo 0 de 4 señales de agotamiento (hacen falta 2).",
+      "senales": [
+       {
+        "id": "divergencia",
+        "titulo": "Divergencia en el monitor",
+        "ok": false,
+        "texto": "No hay divergencia reciente entre el precio y el Squeeze o el RSI.",
+        "regla": "Guía §5.2",
+        "donde": "Ventana del Squeeze: compara las dos últimas crestas verdes (o valles rojos) con los máximos (o mínimos) del precio."
+       },
+       {
+        "id": "doble",
+        "titulo": "Doble techo / doble suelo",
+        "ok": false,
+        "texto": "No hay doble suelo: el precio no se ha quedado repitiendo el último extremo.",
+        "regla": "Guía §5.1 (el precio deja de hacer extremos nuevos)",
+        "donde": "Busca dos picos (o dos suelos) casi a la misma altura sin que el segundo supere al primero."
+       },
+       {
+        "id": "compresion",
+        "titulo": "Medias 10 y 55 juntándose",
+        "ok": false,
+        "texto": "La separación entre la EMA 10 y la EMA 55 es de 3,6 ATR (en lo más fuerte de la tendencia llegó a 3,6) y el precio está a 5,4 ATR de la EMA 55. Siguen separadas: la tendencia mantiene su abanico.",
+        "regla": "Guía §5.1",
+        "donde": "Línea azul (EMA 10) y línea café (EMA 55): ¿se están acercando y el precio oscila pegado a la café?"
+       },
+       {
+        "id": "adx",
+        "titulo": "ADX perdiendo fuerza",
+        "ok": false,
+        "texto": "El ADX está en 56,3 (hace 3 velas, 55,9; su pico reciente, 57,0). Todavía no muestra pérdida clara de fuerza.",
+        "regla": "Guía §5.2 y §2.3",
+        "donde": "Línea blanca del ADX: ¿apunta hacia abajo mientras el precio sigue empujando?"
+       }
+      ]
+     },
+     "escenarios": [
+      {
+       "tipo": "vigila",
+       "cuando": "El precio aguanta bajo la EMA 55 (2.080,4) y el ADX no gira a la baja",
+       "entonces": "La tendencia sigue sana; no hay motivo para dudar de ella."
+      },
+      {
+       "tipo": "debilita",
+       "cuando": "Aparece una divergencia en el Squeeze o el ADX empieza a caer (56,3 ahora)",
+       "entonces": "Sería la primera señal de agotamiento; con una segunda, el panel y el bot lo marcan como «agotándose»."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.039,
+       "nombre": "baja",
+       "rango": [
+        1824.46,
+        2254.26
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -5.39,
+       "poc": 2248.0027,
+       "dist_poc_atr": -9.17,
+       "squeeze_color": "rojo oscuro (acelera a la baja)",
+       "adx_pendiente": 0.31
+      },
+      "entrada_long": {
+       "cumple": 0,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 5,4 ATR por debajo de la EMA 55 (2.080,4) y en el 4 % del rango de las últimas 50 velas (1.824,5 – 2.254,3). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -91,2 a -102: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 56,3 (hace 2 velas, 56,0): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 2.248,0; el precio está a 9,2 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "No hay lateral con el precio en el centro del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 4 % del rango y a -5,4 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX sube (56,0 → 56,3). Caída con fuerza confirmada: intentar comprar es «atrapar un cuchillo».",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 4 % del rango de las últimas 50 velas (1.824,5 – 2.254,3). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 122 % del de hace 20 velas y el ADX sube (56,0 → 56,3). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 0,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: sana. El precio está a 5,4 ATR por debajo de la EMA 55 (2.080,4) y en el 4 % del rango de las últimas 50 velas (1.824,5 – 2.254,3). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -91,2 a -102: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 56,3 (hace 2 velas, 56,0): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): caída con adx con pendiente positiva.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    },
+    "1d": {
+     "score": -0.442,
+     "nota": 2.8,
+     "componentes": {
+      "tendencia": -0.33,
+      "estructura": -1.0,
+      "momento": -1.0,
+      "divergencia": 0.6,
+      "volumen": -0.15
+     },
+     "rsi": 24.3,
+     "ema55": 2323.9970006785757,
+     "ema200": 2315.6946490228884,
+     "atr_pct": 5.12,
+     "divergencia": {
+      "tipo": "alcista",
+      "rsi": false,
+      "squeeze": true,
+      "t": 1793318400000,
+      "det": {
+       "rsi": null,
+       "squeeze": {
+        "tipo": "alcista",
+        "t": 1793318400000,
+        "p": [
+         2318.0,
+         2174.08
+        ],
+        "i": [
+         -202.60951,
+         -116.6133
+        ]
+       }
+      }
+     },
+     "tendencia": {
+      "estado": "ruptura_dudosa",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "senales": {
+       "divergencia": false,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": {
+       "tipo": "alcista",
+       "rsi": false,
+       "squeeze": true,
+       "t": 1793318400000,
+       "det": {
+        "rsi": null,
+        "squeeze": {
+         "tipo": "alcista",
+         "t": 1793318400000,
+         "p": [
+          2318.0,
+          2174.08
+         ],
+         "i": [
+          -202.60951,
+          -116.6133
+         ]
+        }
+       }
+      },
+      "doble": null,
+      "ruptura": {
+       "dir": -1,
+       "t": 1794268800000,
+       "vela_atr": 1.34,
+       "vol_x": 1.44,
+       "cruce": false,
+       "confirmada": false
+      },
+      "adx": 28.2,
+      "squeeze": -178.0232
+     },
+     "compresion": false,
+     "cierre": 1929.88,
+     "t": 1794528000000,
+     "guia": {
+      "horizonte": "10 a 12 días",
+      "uso": "Trading de posición (spot o futuros)",
+      "accion_caidas": "Respetar la tendencia; apartarse si no hay patrón"
+     },
+     "porques": {
+      "resumen": "Nota 2,8/10. El bloque que más pesa ahora es «Momento (RSI y MACD)» (resta 0,25). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -0.33,
+        "peso": 0.35,
+        "aporta": -0.115,
+        "texto": "El precio (1.929,9) está por debajo de la EMA 55 (2.324,0); la EMA 55 está por encima de la EMA 200 (2.315,7); la EMA 55 baja. Conclusión: las señales van mezcladas.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": -1.0,
+        "peso": 0.15,
+        "aporta": -0.15,
+        "texto": "El último máximo (2.450,0) es más bajo que el anterior (2.526,6) y el último mínimo (2.174,1) es más bajo que el anterior (2.318,0). Máximos y mínimos decrecientes: estructura bajista.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -1.0,
+        "peso": 0.25,
+        "aporta": -0.25,
+        "texto": "El RSI está en 24,3 (sobreventa: puede estar cansado a la baja). El histograma del MACD es negativo y baja (-19,7 → -25,1).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.6,
+        "peso": 0.15,
+        "aporta": 0.09,
+        "texto": "Hay divergencia alcista (Squeeze): el precio hizo un mínimo de 2.174,1 (el anterior, 2.318,0) pero el Squeeze marcó -117 frente a -203: menos presión vendedora. Es una señal de que la bajada pierde fuerza.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": -0.15,
+        "peso": 0.1,
+        "aporta": -0.015,
+        "texto": "El volumen de las 3 últimas velas es 1,2× la media de las 20 anteriores. Con volumen alto el movimiento bajista reciente es más fiable.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "ruptura_dudosa",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "resumen": "El precio salió del lateral a la baja: vela de 1,3× ATR (mínimo 1,5), volumen de 1,4× la media (mínimo 1,3) y sin cruce de las EMA 10/55. Falta: fuerza de la vela, cruce de medias. La guía exige las tres a la vez, así que aún no se da por confirmada.",
+      "senales": []
+     },
+     "escenarios": [
+      {
+       "tipo": "confirma",
+       "cuando": "Llega una vela más fuerte, el cruce de medias",
+       "entonces": "La ruptura pasaría a confirmada."
+      },
+      {
+       "tipo": "anula",
+       "cuando": "El precio vuelve dentro del lateral (1.896,0 – 2.450,0)",
+       "entonces": "Sería una falsa ruptura."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.038,
+       "nombre": "baja",
+       "rango": [
+        1895.95,
+        2777.33
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -3.99,
+       "poc": 2479.4988,
+       "dist_poc_atr": -5.57,
+       "squeeze_color": "rojo oscuro (acelera a la baja)",
+       "adx_pendiente": 2.89
+      },
+      "entrada_long": {
+       "cumple": 0,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": false,
+         "texto": "El precio está a 4,0 ATR por debajo de la EMA 55 (2.324,0) y en el 4 % del rango de las últimas 50 velas (1.896,0 – 2.777,3). Está lejos de la media.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -150 a -178: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 28,2 (hace 2 velas, 25,3): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 2.479,5; el precio está a 5,6 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 1,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "No hay lateral con el precio en el centro del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 4 % del rango y a -4,0 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX sube (25,3 → 28,2). Caída con fuerza confirmada: intentar comprar es «atrapar un cuchillo».",
+         "activa": true,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 4 % del rango de las últimas 50 velas (1.896,0 – 2.777,3). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 103 % del de hace 20 velas y el ADX sube (25,3 → 28,2). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 0,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": false,
+         "texto": "Estado de la tendencia: posible ruptura. El precio está a 4,0 ATR por debajo de la EMA 55 (2.324,0) y en el 4 % del rango de las últimas 50 velas (1.896,0 – 2.777,3). Está lejos de la media.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de -150 a -178: rojo oscuro (acelera a la baja). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": false,
+         "texto": "El ADX está en 28,2 (hace 2 velas, 25,3): pendiente positiva. El movimiento actual sí lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": false,
+         "texto": "Hay 1 zona(s) no operable(s) activa(s): caída con adx con pendiente positiva.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    },
+    "1w": {
+     "score": -0.361,
+     "nota": 3.2,
+     "componentes": {
+      "tendencia": -1,
+      "estructura": 0.0,
+      "momento": -0.04,
+      "divergencia": 0.0,
+      "volumen": 0
+     },
+     "rsi": 44.2,
+     "ema55": 2422.790254220215,
+     "ema200": 2456.803166647732,
+     "atr_pct": 12.3,
+     "divergencia": null,
+     "tendencia": {
+      "estado": "lateral",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "senales": {
+       "divergencia": false,
+       "doble": false,
+       "compresion": false,
+       "adx": false
+      },
+      "divergencia": null,
+      "doble": null,
+      "ruptura": null,
+      "adx": 18.8,
+      "squeeze": 456.0548
+     },
+     "compresion": false,
+     "cierre": 2127.46,
+     "t": 1793577600000,
+     "guia": {
+      "horizonte": "3 a 6 meses",
+      "uso": "Inversión de medio plazo en spot",
+      "accion_caidas": "Buscar zonas de soporte para compras escalonadas"
+     },
+     "porques": {
+      "resumen": "Nota 3,2/10. El bloque que más pesa ahora es «Tendencia de fondo» (resta 0,35). Cada bloque va de −1 (todo bajista) a +1 (todo alcista) y se multiplica por su peso.",
+      "bloques": [
+       {
+        "id": "tendencia",
+        "titulo": "Tendencia de fondo",
+        "valor": -1,
+        "peso": 0.35,
+        "aporta": -0.35,
+        "texto": "El precio (2.127,5) está por debajo de la EMA 55 (2.422,8); la EMA 55 está por debajo de la EMA 200 (2.456,8); la EMA 55 baja. Conclusión: mandan los vendedores.",
+        "donde": "Pon las EMA 55 y 200 en el gráfico (la 55 es la misma de tu guía). La EMA 10 junto a la 55 se usa aparte, para ver si la tendencia se agota: mira «Estado de la tendencia»."
+       },
+       {
+        "id": "estructura",
+        "titulo": "Estructura (máximos y mínimos)",
+        "valor": 0.0,
+        "peso": 0.15,
+        "aporta": 0.0,
+        "texto": "El último máximo (2.807,3) es más alto que el anterior (2.464,9) y el último mínimo (1.505,7) es más bajo que el anterior (1.747,8). Estructura mixta: no confirma ninguna dirección.",
+        "donde": "Marca a ojo los dos últimos máximos y los dos últimos mínimos: ¿van subiendo o bajando?"
+       },
+       {
+        "id": "momento",
+        "titulo": "Momento (RSI y MACD)",
+        "valor": -0.04,
+        "peso": 0.25,
+        "aporta": -0.01,
+        "texto": "El RSI está en 44,2 (por debajo de 50: manda el impulso vendedor). El histograma del MACD es positivo y baja (29,1 → 3,81).",
+        "donde": "Panel del RSI (línea frente a la de 50) y panel del MACD (barras del histograma)."
+       },
+       {
+        "id": "divergencia",
+        "titulo": "Divergencias",
+        "valor": 0.0,
+        "peso": 0.15,
+        "aporta": 0.0,
+        "texto": "No hay divergencia reciente (últimas ~20 velas) entre el precio y el RSI o el Squeeze.",
+        "donde": "Compara las dos últimas crestas (o valles) del Squeeze con los dos últimos máximos (o mínimos) del precio."
+       },
+       {
+        "id": "volumen",
+        "titulo": "Volumen",
+        "valor": 0,
+        "peso": 0.1,
+        "aporta": 0.0,
+        "texto": "El volumen de las 3 últimas velas es 0,8× la media de las 20 anteriores. Volumen normal o bajo: no refuerza ni resta.",
+        "donde": "Barras de volumen bajo el gráfico: las 3 últimas frente a las 20 anteriores."
+       }
+      ]
+     },
+     "tendencia_explicada": {
+      "estado": "lateral",
+      "dir": 0,
+      "n_senales": 0,
+      "min": 2,
+      "resumen": "El precio está en un lateral: ADX 18,8 (bajo 25), EMA 10 y 55 a 0,3 ATR una de otra y un rango de 5,0 ATR en 20 velas. Según la guía (§5.3), las tendencias suelen pasar por un lateral antes de girar.",
+      "senales": []
+     },
+     "escenarios": [
+      {
+       "tipo": "confirma",
+       "cuando": "Cierre por encima de 2.807,3 con una vela de al menos 392,4 de recorrido (1,5 ATR), volumen de 1,3× la media o más y la EMA 10 cruzando sobre la 55",
+       "entonces": "Ruptura alcista confirmada: la guía da por cambiada la tendencia."
+      },
+      {
+       "tipo": "confirma",
+       "cuando": "Cierre por debajo de 1.512,0 con las mismas tres condiciones",
+       "entonces": "Ruptura bajista confirmada."
+      },
+      {
+       "tipo": "vigila",
+       "cuando": "Mientras no rompa",
+       "entonces": "El centro del lateral es zona no operable según la guía: ni compra ni venta con ventaja."
+      }
+     ],
+     "estrategia": {
+      "zona": {
+       "pos": 0.32,
+       "nombre": "baja",
+       "rango": [
+        1505.68,
+        3447.44
+       ],
+       "ventana": 50,
+       "dist_ema55_atr": -1.13,
+       "poc": 2389.5991,
+       "dist_poc_atr": -1.0,
+       "squeeze_color": "verde claro (pierde tracción)",
+       "adx_pendiente": -1.19
+      },
+      "entrada_long": {
+       "cumple": 2,
+       "total": 4,
+       "items": [
+        {
+         "id": "precio",
+         "titulo": "Precio en la EMA 55 o en la parte baja del lateral",
+         "ok": true,
+         "texto": "El precio está a 1,1 ATR por debajo de la EMA 55 (2.422,8) y en el 32 % del rango de las últimas 50 velas (1.505,7 – 3.447,4). Está lejos de la media. Además está en la parte baja de un lateral.",
+         "regla": "Guía §3 · Acción del precio",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "squeeze",
+         "titulo": "Squeeze: valle rojo que se gira al alza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de 539 a 456: verde claro (pierde tracción). No es un valle que se gire al alza.",
+         "regla": "Guía §2.2 y §3",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "ADX con pendiente negativa",
+         "ok": true,
+         "texto": "El ADX está en 18,8 (hace 2 velas, 20,0): pendiente negativa. La caída no lleva fuerza.",
+         "regla": "Guía §2.3 y §3",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "poc",
+         "titulo": "Cerca del POC (aproximado)",
+         "ok": false,
+         "texto": "El POC aproximado de las últimas 100 velas está en 2.389,6; el precio está a 1,0 ATR por debajo. Por debajo del POC (haría de resistencia). Es una aproximación calculada con las velas, no el POC de tu TradingView.",
+         "regla": "Guía §2.4 y §3",
+         "donde": "Perfil de volumen con el POC extendido a la derecha: ¿el precio está justo sobre esa línea?"
+        }
+       ]
+      },
+      "zonas_no_operables": {
+       "activas": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "media",
+         "titulo": "Parte media de un lateral",
+         "texto": "Hay lateral pero el precio está en la parte baja del rango.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Dibuja la caja del lateral y mira si el precio está en el tercio central."
+        },
+        {
+         "id": "topado",
+         "titulo": "Topado arriba o sobreextendido sobre la EMA 55",
+         "texto": "El precio está en el 32 % del rango y a -1,1 ATR de la EMA 55: ni pegado al techo ni muy separado de la media.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Distancia entre el precio y la línea café; ¿está tocando la resistencia?"
+        },
+        {
+         "id": "cuchillo",
+         "titulo": "Caída con ADX con pendiente positiva",
+         "texto": "El precio cae (cierra por debajo del de hace 5 velas) y el ADX baja (20,0 → 18,8). No es una caída con fuerza.",
+         "activa": false,
+         "regla": "Guía §3.3",
+         "donde": "Línea blanca del ADX mientras el precio cae: si sube, no compres."
+        }
+       ]
+      },
+      "salida": {
+       "cumple": 0,
+       "total": 3,
+       "items": [
+        {
+         "id": "alta",
+         "titulo": "Parte alta del rango o resistencia",
+         "ok": false,
+         "texto": "El precio está en el 32 % del rango de las últimas 50 velas (1.505,7 – 3.447,4). No está en la parte alta.",
+         "regla": "Guía §3.2",
+         "donde": "Techo del lateral o resistencia previa: ¿el precio llega a ella?"
+        },
+        {
+         "id": "divergencia",
+         "titulo": "Divergencia bajista en el monitor",
+         "ok": false,
+         "texto": "No hay divergencia bajista en el Squeeze.",
+         "regla": "Guía §3.2 y §5.2",
+         "donde": "Crestas verdes del Squeeze: ¿la última es más baja que la anterior con el precio igual o más alto?"
+        },
+        {
+         "id": "volatilidad",
+         "titulo": "Pérdida de volatilidad tras un impulso",
+         "ok": false,
+         "texto": "El rango de las velas (ATR) es 86 % del de hace 20 velas y el ADX baja (20,0 → 18,8). No se da la combinación de aplanamiento y ADX cediendo tras una subida.",
+         "regla": "Guía §3.2 y §5.1",
+         "donde": "Velas cada vez más pequeñas y línea blanca del ADX girando hacia abajo."
+        },
+        {
+         "id": "breakeven",
+         "titulo": "Stop loss a breakeven",
+         "ok": null,
+         "texto": "Esto no se puede medir: es una acción tuya. Cuando la operación en long entra en positivo tras un rebote, sube el stop ligeramente por encima del precio de entrada.",
+         "regla": "Guía §3.2",
+         "manual": true
+        }
+       ]
+      },
+      "checklist": {
+       "auto_ok": 3,
+       "auto_total": 4,
+       "items": [
+        {
+         "id": "estructura",
+         "titulo": "1. Estructura: cerca de la EMA 55 o en la parte baja del rango",
+         "ok": true,
+         "texto": "Estado de la tendencia: lateral. El precio está a 1,1 ATR por debajo de la EMA 55 (2.422,8) y en el 32 % del rango de las últimas 50 velas (1.505,7 – 3.447,4). Está lejos de la media. Además está en la parte baja de un lateral.",
+         "regla": "Guía §6.1",
+         "donde": "Línea café (EMA 55): ¿el precio la está tocando o viene de retroceder hasta ella?"
+        },
+        {
+         "id": "monitor",
+         "titulo": "2. Monitor: valle rojo que pierde fuerza",
+         "ok": false,
+         "texto": "El histograma del Squeeze pasa de 539 a 456: verde claro (pierde tracción). No es un valle que se gire al alza.",
+         "regla": "Guía §6.1",
+         "donde": "Ventana del Squeeze en modo área: busca el cambio de rojo oscuro a rojo claro (rosa)."
+        },
+        {
+         "id": "adx",
+         "titulo": "3. ADX con pendiente negativa",
+         "ok": true,
+         "texto": "El ADX está en 18,8 (hace 2 velas, 20,0): pendiente negativa. La caída no lleva fuerza.",
+         "regla": "Guía §6.1",
+         "donde": "Línea blanca del ADX: ¿apunta hacia abajo?"
+        },
+        {
+         "id": "zona",
+         "titulo": "4. No estás en zona no operable",
+         "ok": true,
+         "texto": "Ninguna de las 3 zonas de exclusión está activa.",
+         "regla": "Guía §6.1"
+        },
+        {
+         "id": "riesgo",
+         "titulo": "5. Riesgo en derivados",
+         "ok": null,
+         "texto": "Margen aislado, apalancamiento moderado (máximo 5x–10x) y stop loss puesto desde el origen. Esto lo marcas tú.",
+         "regla": "Guía §4.2 y §6.1",
+         "manual": true
+        },
+        {
+         "id": "capital",
+         "titulo": "6. Asignación de capital",
+         "ok": null,
+         "texto": "Primera entrada con un 2 %–4 % de la liquidez y reserva para promediar solo en soportes de más jerarquía. Esto lo marcas tú.",
+         "regla": "Guía §4.3 y §6.1",
+         "manual": true
+        }
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}

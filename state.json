@@ -1,0 +1,21 @@
+{
+ "tg_offset": 687132889,
+ "simbolos": {
+  "BTCUSDT": "normal",
+  "ETHUSDT": "fuerte_bajista"
+ },
+ "divergencias": {
+  "BTCUSDT|1w|alcista|1782691200000": 1794328313,
+  "BTCUSDT|4h|alcista|1794168000000": 1794331664,
+  "ETHUSDT|4h|alcista|1794168000000": 1794331664,
+  "ETHUSDT|1d|alcista|1793318400000": 1794331664,
+  "BTCUSDT|4h|alcista|1794326400000": 1794412957
+ },
+ "agotamiento": {
+  "BTCUSDT|4h": 0,
+  "BTCUSDT|1d": 0,
+  "ETHUSDT|4h": 0,
+  "ETHUSDT|1d": 0
+ },
+ "rupturas": {}
+}
